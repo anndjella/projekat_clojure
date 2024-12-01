@@ -41,9 +41,10 @@
 (take 4 (:rows (process-data "resources/IMDbMovies.csv")) )
 
 (defn number-of-rows
-  [data]
-  (let [rows (:rows data)]
-  (count rows)))
+  [rows]
+ ;; (let [rows (:rows data)]
+  (count rows))
+  
 
 
 (defn missing-check
@@ -95,26 +96,39 @@
   [column-key rows]
   (count (filter #(or (nil? (column-key %)) (empty? (column-key %))) rows)))
 
+(defn print-num-of-missing-values
+  "Prints number of missing values in each column"
+  [header rows]
+  (doseq [x header]
+    (println (str "Missing values for " x ": " (missing-values-in-column x rows)))))
+
+
+(defn ratio-NA
+  "Returns a map of ratios of missing values to total values for each column in the header"
+  [header rows]
+ (doseq [column header]
+ (let [missing-in-column (missing-values-in-column column rows)
+       total-rows (number-of-rows rows)
+       percent (if (zero? total-rows)
+       0
+       (* (/ (float missing-in-column) total-rows) 100) )]
+       (println (str "Column: " column ", Percent of missing values: " percent)))))
+
+;;mozda treba izbaciti sledece varijable zbog postojanja velikog broja nedostajucih vrednosti:
+;;Budget, 35.27% svih vrednosti je NA
+;;Gross-in-US-&-Canada, 33.24% svih vrednosti je NA
+;;Opening-Weekend-Gross-in-US-&-Canada, 37.3% svih vrednosti je NA
+
 (defn -main
   [& args]
   (let [{:keys [header rows]} (process-data "resources/IMDbMovies.csv")]
-    (println (str "Number of movies in this dataset: " (number-of-rows (process-data "resources/IMDbMovies.csv"))))
+    (println (str "Number of movies in this dataset: " (number-of-rows rows)))
     (println "All attributes in the dataset:")
     (println (str/join ", " header))
-    (println "Missing values in 'Title':" (missing-values-in-column :Title rows))
-    (println "Missing values in 'Summary':" (missing-values-in-column :Summary rows))
-    (println "Missing values in 'Director':" (missing-values-in-column :Director rows))
-    (println "Missing values in 'Writer':" (missing-values-in-column :Writer rows))
-    (println "Missing values in 'Main-Genres':" (missing-values-in-column :Main-Genres rows))
-    (println "Missing values in 'Motion-Picture-Rating':" (missing-values-in-column :Motion-Picture-Rating rows))
-    (println "Missing values in 'Runtime':" (missing-values-in-column :Runtime rows))
-    (println "Missing values in 'Release-Year':" (missing-values-in-column :Release-Year rows))
-    (println "Missing values in 'Rating':" (missing-values-in-column :Rating rows))
-    (println "Missing values in 'Number-of-Ratings':" (missing-values-in-column :Number-of-Ratings rows))
-    (println "Missing values in 'Budget':" (missing-values-in-column :Budget rows))
-    (println "Missing values in 'Gross-in-US-&-Canada':" (missing-values-in-column :Gross-in-US-&-Canada rows))
-    (println "Missing values in 'Gross-worldwide':" (missing-values-in-column :Gross-worldwide rows))
-    (println "Missing values in 'Opening-Weekend-Gross-in-US-&-Canada':" (missing-values-in-column :Opening-Weekend-Gross-in-US-&-Canada rows))))
+    (print-num-of-missing-values header rows) 
+    (println "===============================")
+    (ratio-NA header rows)))
+
   
 
 

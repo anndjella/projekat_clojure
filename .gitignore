@@ -4,6 +4,8 @@
 profiles.clj
 pom.xml
 .calva/output-window/*
+.clj-kondo/.cache/v1/
+.lsp/.cache
 pom.xml.asc
 *.jar
 *.class

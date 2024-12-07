@@ -119,15 +119,47 @@
 ;;Gross-in-US-&-Canada, 33.24% svih vrednosti je NA
 ;;Opening-Weekend-Gross-in-US-&-Canada, 37.3% svih vrednosti je NA
 
+;;all columns are type string, so they must be cleaned and converted
+;;to their appropriate types for accurate analysis and processing. Then NA values
+;;must be handled
+
+(defn get-column
+  "Function needed in another functions for getting column by its name"
+  [column-key rows]
+  (mapv #(get % column-key)rows))
+
+(defn extract-currency-prefix
+  "Extracts the prefix or initial part of the budget value"
+  [budget]
+  (let [prefix (str/trim (subs budget 0 (min 3 (count budget))))]
+    (if (empty? prefix)
+      nil
+      prefix)))
+
+(defn get-all-currency-prefixes
+  "Returns a list of all unique currency prefixes from the Budget column"
+  [rows]
+  (let [prefixes (map (fn [row] (extract-currency-prefix (get row :Budget))) rows)]
+    (distinct (remove nil? prefixes))))
+
+;;there are many different currencies and we need to transform them to only one
+;;so that prediction can be cosistent
+;;DKKÂ $ ₹ ₩ € IDR £ FRF sek dok nok rur dem ca$ fim a$ CN¥ vmr
+;; bef nz$ nt$ r$ thb nlg czk dkk frf ats
+
 (defn -main
-  [& args]
+  [& arg]
   (let [{:keys [header rows]} (process-data "resources/IMDbMovies.csv")]
     (println (str "Number of movies in this dataset: " (number-of-rows rows)))
     (println "All attributes in the dataset:")
     (println (str/join ", " header))
-    (print-num-of-missing-values header rows) 
+    (print-num-of-missing-values header rows)
     (println "===============================")
-    (ratio-NA header rows)))
+    (ratio-NA header rows)
+    (println "===============================")
+    (println "We need to clean values so that we can handle NA values.")
+    ;;(println (get-all-currency-prefixes rows))
+    ))
 
   
 

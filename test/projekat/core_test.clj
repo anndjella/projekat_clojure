@@ -21,3 +21,16 @@
 (facts "Map-row fn tests"
        (map-row {:Ime "andjela" :Prezime "stan" :godiste "2001"} [:Ime :Prezime :godiste])
        => ["andjela" "stan" "2001"])
+
+(facts "Parse-rating fn tests"
+       (parse-rating "4.5/10") => 4.5
+       (parse-rating "6.0/10") => 6.0
+       (parse-rating "") => nil
+       (parse-rating nil) => nil)
+
+(facts "Clean-rating tests"
+       (clean-rating {:ime "andjela" :Rating "3.2/10" :prezime "Stan"})
+       => {:ime "andjela", :Rating "3.2/10", :prezime "Stan", :Rating-Cleaned 3.2}
+
+       (clean-rating {:ime "luka" :Rating nil :prezime "asrsic"})
+       => {:ime "luka", :Rating nil, :prezime "asrsic", :Rating-Cleaned nil})

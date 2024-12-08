@@ -95,12 +95,45 @@
   [row header-with-budget]
   (map #(get row %) header-with-budget))
 
-(defn process-and-save-data 
+
+
+(defn parse-rating
+  [rating]
+  (if (or (nil? rating) (str/blank? rating))
+    nil
+    (let [rat (-> rating
+                  (str/split #"/")
+                  (first)
+                  (Double/parseDouble))]
+      (if rat
+        rat
+        nil))))
+
+;; (first (str/split "4.5/10" #"/"))
+
+(defn clean-rating
+  "Creates new row in a map with cleaned values from Rating column"
+  [row]
+  (let [rating (get row :Rating)
+        cleaned-rating (parse-rating rating)]
+    (assoc row :Rating-Cleaned cleaned-rating)))
+
+
+(defn process-and-save-data
   "Processing and saving data in csv file"
   [output-file header rows]
-  (let [cleaned-rows (map #(clean-budget %) rows)
-        header-with-budget (conj header :Budget-Cleaned)]
+  (let [cleaned-rows ;;(map #(clean-budget %) rows)
+        (map #(-> %
+                  (clean-budget)
+                  (clean-rating)
+                  (dissoc :Budget :Rating))
+             rows)
+        header-with-budget (->> header
+                              (remove #{:Budget :Rating})
+                              (concat [:Budget-Cleaned :Rating-Cleaned])
+                               vec)]
     (with-open [writer (io/writer output-file)]
       (csv/write-csv writer
                      (cons header-with-budget
                            (map #(map-row % header-with-budget) cleaned-rows))))))
+

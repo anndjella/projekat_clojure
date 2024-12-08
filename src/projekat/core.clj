@@ -1,7 +1,8 @@
 (ns projekat.core
   (:require [clojure.data.csv :as csv]
             [clojure.java.io :as io]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [projekat.cleaning :as clean]))
 
 (defn load-csv
   "Loads csv"
@@ -159,6 +160,7 @@
     (println "===============================")
     (println "We need to clean values so that we can handle NA values.")
     ;;(println (get-all-currency-prefixes rows))
+    (clean/process-and-save-data "resources/cleanedCSV.csv" header rows)
     ))
 
   

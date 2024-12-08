@@ -71,7 +71,6 @@
    :dop 0.017
    })
 
-
 (defn parse-budget [budget]
   (if (or (nil? budget) (str/blank? budget))
     nil
@@ -83,3 +82,25 @@
       (if currency
         (* raw-value (get conversion-rates currency 1))
         nil))))
+
+(defn clean-budget
+  "Creates new row in a map with cleaned values from Budget column"
+  [row]
+  (let [budget (get row :Budget)
+        cleaned-budget (parse-budget budget)]
+    (assoc row :Budget-Cleaned cleaned-budget)))
+
+(defn map-row 
+  "Returns values in order by keys"
+  [row header-with-budget]
+  (map #(get row %) header-with-budget))
+
+(defn process-and-save-data 
+  "Processing and saving data in csv file"
+  [output-file header rows]
+  (let [cleaned-rows (map #(clean-budget %) rows)
+        header-with-budget (conj header :Budget-Cleaned)]
+    (with-open [writer (io/writer output-file)]
+      (csv/write-csv writer
+                     (cons header-with-budget
+                           (map #(map-row % header-with-budget) cleaned-rows))))))

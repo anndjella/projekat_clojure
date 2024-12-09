@@ -1,7 +1,8 @@
 (ns projekat.cleaning
   (:require [clojure.data.csv :as csv]
             [clojure.java.io :as io]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [projekat.cleaning :as clean]))
 
 (defn detect-currency [value]
     (cond
@@ -118,6 +119,25 @@
         cleaned-rating (parse-rating rating)]
     (assoc row :Rating-Cleaned cleaned-rating)))
 
+;; (re-matches #"(\d+)h (\d+)m" "1h 3m")
+
+(defn parse-runtime
+  "Converts runtime string (like 2h 12m) to minutes"
+  [runtime-str]
+  (if (or (nil? runtime-str) (str/blank? runtime-str))
+    nil
+    (let [hours (when-let [hrs (re-find #"(\d+)h" runtime-str)]
+                  (Integer/parseInt (second hrs)))
+          minutes (when-let [mins (re-find #"(\d+)m" runtime-str)]
+                    (Integer/parseInt (second mins)))]
+      (+ (* (or hours 0) 60) (or minutes 0)))))
+
+(defn clean-runtime
+  "Creates new row in a map with cleaned values from Runtime column"
+  [row]
+  (let [runtime (get row :Runtime)
+        cleaned-r (parse-runtime runtime)]
+    (assoc row :Runtime-Cleaned cleaned-r)))
 
 (defn process-and-save-data
   "Processing and saving data in csv file"
@@ -126,11 +146,12 @@
         (map #(-> %
                   (clean-budget)
                   (clean-rating)
-                  (dissoc :Budget :Rating))
+                  (clean-runtime)
+                  (dissoc :Budget :Rating :Runtime))
              rows)
         header-with-budget (->> header
-                              (remove #{:Budget :Rating})
-                              (concat [:Budget-Cleaned :Rating-Cleaned])
+                              (remove #{:Budget :Rating :Runtime})
+                              (concat [:Budget-Cleaned :Rating-Cleaned :Runtime-Cleaned])
                                vec)]
     (with-open [writer (io/writer output-file)]
       (csv/write-csv writer

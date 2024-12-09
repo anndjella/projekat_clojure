@@ -34,3 +34,13 @@
 
        (clean-rating {:ime "luka" :Rating nil :prezime "asrsic"})
        => {:ime "luka", :Rating nil, :prezime "asrsic", :Rating-Cleaned nil})
+
+(facts "Parse-runtime fn tests"
+       (parse-runtime "2h 12m") => 132
+       (parse-runtime "1h 5m") => 65
+       (parse-runtime "5m") => 5
+       (parse-runtime "1h 5m") => 65
+       (parse-runtime "2h") => 120
+       (parse-runtime "2") => 0
+       (parse-runtime "") => nil
+       (parse-runtime nil) => nil)

@@ -44,3 +44,10 @@
        (parse-runtime "2") => 0
        (parse-runtime "") => nil
        (parse-runtime nil) => nil)
+
+(facts "Parse-num-of-ratings fn tests" 
+       (parse-num-of-ratings "89M") => 89000000
+       (parse-num-of-ratings "34K") => 34000
+       (parse-num-of-ratings "233") => 233
+       (parse-num-of-ratings " ") => nil
+       (parse-num-of-ratings nil) => nil)

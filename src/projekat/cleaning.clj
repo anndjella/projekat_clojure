@@ -139,6 +139,26 @@
         cleaned-r (parse-runtime runtime)]
     (assoc row :Runtime-Cleaned cleaned-r)))
 
+(defn parse-num-of-ratings
+  "Leaves only number in number of ratings"
+  [str] 
+  (if(or (nil? str) (str/blank? str)) 
+      nil
+   (if (str/includes? str "K")
+     (int (* (Double/parseDouble (first (str/split,str, #"K"))) 1000))
+     (if (str/includes? str "M")
+      (int (* (Double/parseDouble (first (str/split,str, #"M"))) 1000000))
+       (int (Double/parseDouble str))))))
+
+(defn clean-num-of-ratings
+  "Creates new row in a map with cleaned values from Number-of-Ratings column"
+  [row]
+  (let [runtime (get row :Number-of-Ratings)
+        cleaned-num (parse-num-of-ratings runtime)]
+    (assoc row :Num-of-Ratings-Cleaned cleaned-num)))
+
+;; (first (str/split,"34K", #"K"))
+
 (defn process-and-save-data
   "Processing and saving data in csv file"
   [output-file header rows]
@@ -147,14 +167,14 @@
                   (clean-budget)
                   (clean-rating)
                   (clean-runtime)
-                  (dissoc :Budget :Rating :Runtime))
+                  (clean-num-of-ratings)
+                  (dissoc :Budget :Rating :Runtime :Number-of-Ratings))
              rows)
         header-with-budget (->> header
-                              (remove #{:Budget :Rating :Runtime})
-                              (concat [:Budget-Cleaned :Rating-Cleaned :Runtime-Cleaned])
+                              (remove #{:Budget :Rating :Runtime :Number-of-Ratings})
+                              (concat [:Budget-Cleaned :Rating-Cleaned :Runtime-Cleaned :Num-of-Ratings-Cleaned])
                                vec)]
     (with-open [writer (io/writer output-file)]
       (csv/write-csv writer
                      (cons header-with-budget
                            (map #(map-row % header-with-budget) cleaned-rows))))))
-

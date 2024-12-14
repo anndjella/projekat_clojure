@@ -73,7 +73,7 @@
    })
 
 (defn parse-budget [budget]
-  (if (or (nil? budget) (str/blank? budget))
+  (if (or (nil? budget) (str/blank? budget) (not (re-find #"\d" budget)))
     nil
     (let [currency (detect-currency budget)
           raw-value (->> budget
@@ -86,10 +86,11 @@
 
 (defn clean-budget
   "Creates new row in a map with cleaned values from Budget column"
-  [row]
-  (let [budget (get row :Budget)
+  [row column-key]
+  (let [budget (get row (keyword column-key))
         cleaned-budget (parse-budget budget)]
-    (assoc row :Budget-Cleaned cleaned-budget)))
+    (assoc row (keyword (str column-key "-Cleaned"))  cleaned-budget)))
+
 
 (defn map-row 
   "Returns values in order by keys"
@@ -164,15 +165,17 @@
   [output-file header rows]
   (let [cleaned-rows ;;(map #(clean-budget %) rows)
         (map #(-> %
-                  (clean-budget)
-                  (clean-rating)
+                  (clean-budget "Budget")
+                  (clean-budget "Gross-in-US-&-Canada")
+                  (clean-budget "Gross-worldwide")
+                  (clean-rating )
                   (clean-runtime)
                   (clean-num-of-ratings)
-                  (dissoc :Budget :Rating :Runtime :Number-of-Ratings))
+                  (dissoc :Budget :Rating :Runtime :Number-of-Ratings :Gross-in-US-&-Canada :Gross-worldwide))
              rows)
         header-with-budget (->> header
-                              (remove #{:Budget :Rating :Runtime :Number-of-Ratings})
-                              (concat [:Budget-Cleaned :Rating-Cleaned :Runtime-Cleaned :Num-of-Ratings-Cleaned])
+                              (remove #{:Budget :Rating :Runtime :Number-of-Ratings :Gross-in-US-&-Canada :Gross-worldwide})
+                              (concat [:Budget-Cleaned :Rating-Cleaned :Runtime-Cleaned :Num-of-Ratings-Cleaned :Gross-in-US-&-Canada-Cleaned :Gross-worldwide-Cleaned])
                                vec)]
     (with-open [writer (io/writer output-file)]
       (csv/write-csv writer

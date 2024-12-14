@@ -1,7 +1,7 @@
 (ns projekat.core-test
   (:require [clojure.test :refer :all]
             [projekat.cleaning :refer :all]
-            [midje.sweet :refer [facts =>]]))
+            [midje.sweet :refer [facts => throws]]))
 
 (facts "Parse-budget function test"
        (parse-budget "$200,000,000 (estimated)") => 200000000.0
@@ -12,11 +12,26 @@
        (parse-budget nil) => nil)
 
 (facts "Clean-budget tests"
-       (clean-budget {:ime "andjela" :Budget "$1000,0" :prezime "Stan"})
+       (clean-budget {:ime "andjela" :Budget "$1000,0" :prezime "Stan"} "Budget")
        => {:ime "andjela", :Budget "$1000,0", :prezime "Stan", :Budget-Cleaned 10000.0}
        
-       (clean-budget {:ime "luka" :Budget "SEK2000,0" :prezime "asrsic"})
-       =>{:ime "luka", :Budget "SEK2000,0", :prezime "asrsic", :Budget-Cleaned 1820.0} )
+       (clean-budget {:ime "luka" :Budget "SEK2000,0" :prezime "asrsic"} "Budget")
+       =>{:ime "luka", :Budget "SEK2000,0", :prezime "asrsic", :Budget-Cleaned 1820.0}
+       
+       (clean-budget {:ime "luka" :Gross-worldwide "SEK2000,0" :prezime "asrsic"} "Gross-worldwide")
+       => {:ime "luka", :Gross-worldwide "SEK2000,0", :prezime "asrsic", :Gross-worldwide-Cleaned 1820.0}
+       
+        (clean-budget {:ime "slavca" :Gross-in-US-&-Canada "SEK2000,0" :prezime "kikic"} "Gross-in-US-&-Canada")
+       => {:ime "slavca", :Gross-in-US-&-Canada "SEK2000,0", :prezime "kikic", :Gross-in-US-&-Canada-Cleaned 1820.0}
+       
+       (clean-budget {:ime "andjela" :Budget "" :prezime "Stan"} "Budget")
+       => {:ime "andjela", :Budget "", :prezime "Stan", :Budget-Cleaned nil}
+       
+       (clean-budget {:ime "luka" :Budget "InvalidFormat" :prezime "asrsic"} "Budget")
+       => {:ime "luka", :Budget "InvalidFormat", :prezime "asrsic", :Budget-Cleaned nil}
+       
+        (clean-budget {:ime "andjela" :prezime "Stan"} "Budget")
+         => {:Budget-Cleaned nil :ime "andjela" :prezime "Stan"})
 
 (facts "Map-row fn tests"
        (map-row {:Ime "andjela" :Prezime "stan" :godiste "2001"} [:Ime :Prezime :godiste])

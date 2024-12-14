@@ -148,6 +148,9 @@
 ;;DKKÂ $ ₹ ₩ € IDR £ FRF sek dok nok rur dem ca$ fim a$ CN¥ vmr
 ;; bef nz$ nt$ r$ thb nlg czk dkk frf ats
 
+;;because Opening-Weekend-Gross-in-US-&-Canada has 37.3% of all values NA, 
+;;it won't be included in analysis
+
 (defn -main
   [& arg]
   (let [{:keys [header rows]} (process-data "resources/IMDbMovies.csv")]

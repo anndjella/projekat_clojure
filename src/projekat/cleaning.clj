@@ -160,22 +160,61 @@
 
 ;; (first (str/split,"34K", #"K"))
 
+(defn parse-genres
+  [row]
+  (let [genres (get row :Main-Genres)]
+    (if (or (empty? genres) (str/blank? genres) )
+       []
+      (remove str/blank? (distinct (str/split genres #","))))
+    ))
+ ;;(map #(str/split % #",") row))
+
+(defn extract-distinct-genres
+  [rows]
+  (distinct (flatten (map #(parse-genres %) rows))))
+
+(defn create-genre-map
+  "Creates a map with all genres set to 0"
+  [genres]
+  (zipmap (map keyword genres) (repeat 0)))
+
+(defn encode-genres
+  "Creates one-hot encoded map for given genres"
+  [all-genres row-genres]
+  (reduce #(assoc %1 (keyword %2) 1)
+          (create-genre-map all-genres)
+          row-genres))
+
+(defn add-genre-columns
+  "Adds one-hot encoded genre columns to the row"
+  [row all-genres]
+  (let [row-genres (parse-genres row)
+        genre-encoding (encode-genres all-genres row-genres)]
+    (merge row genre-encoding)))
+
 (defn process-and-save-data
   "Processing and saving data in csv file"
   [output-file header rows]
-  (let [cleaned-rows ;;(map #(clean-budget %) rows)
+  (let [all-genres (extract-distinct-genres rows)
+        cleaned-rows ;;(map #(clean-budget %) rows)
         (map #(-> %
                   (clean-budget "Budget")
                   (clean-budget "Gross-in-US-&-Canada")
                   (clean-budget "Gross-worldwide")
                   (clean-rating )
                   (clean-runtime)
-                  (clean-num-of-ratings)
-                  (dissoc :Budget :Rating :Runtime :Number-of-Ratings :Gross-in-US-&-Canada :Gross-worldwide))
-             rows)
+                  (clean-num-of-ratings) 
+                  (add-genre-columns all-genres)
+                  (dissoc :Budget :Rating :Runtime :Number-of-Ratings 
+                          :Gross-in-US-&-Canada :Gross-worldwide :Main-Genres))
+             rows) 
+        genre-keywords (map keyword all-genres)
         header-with-budget (->> header
-                              (remove #{:Budget :Rating :Runtime :Number-of-Ratings :Gross-in-US-&-Canada :Gross-worldwide})
-                              (concat [:Budget-Cleaned :Rating-Cleaned :Runtime-Cleaned :Num-of-Ratings-Cleaned :Gross-in-US-&-Canada-Cleaned :Gross-worldwide-Cleaned])
+                              (remove #{:Budget :Rating :Runtime :Number-of-Ratings 
+                                        :Gross-in-US-&-Canada :Gross-worldwide :Main-Genres})
+                              (concat [:Budget-Cleaned :Rating-Cleaned :Runtime-Cleaned
+                                       :Num-of-Ratings-Cleaned :Gross-in-US-&-Canada-Cleaned 
+                                       :Gross-worldwide-Cleaned] genre-keywords)
                                vec)]
     (with-open [writer (io/writer output-file)]
       (csv/write-csv writer

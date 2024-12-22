@@ -66,3 +66,41 @@
        (parse-num-of-ratings "233") => 233
        (parse-num-of-ratings " ") => nil
        (parse-num-of-ratings nil) => nil)
+
+(facts "Parse-genres fn tests"
+       (parse-genres {:random_key "1234 ":Main-Genres "Action,Adventure,Comedy"}) => ["Action" "Adventure" "Comedy"]
+       (parse-genres {:Main-Genres "Action,Action,Adventure"}) => ["Action" "Adventure"] 
+       (parse-genres {:Main-Genres "Action, ,Adventure"}) => ["Action" "Adventure"]
+       (parse-genres {:Main-Genres " , , "}) => []
+       (parse-genres {:Main-Genres ""}) => [] 
+       (parse-genres {:Main-Genres nil}) => [])
+
+(facts "Extract-distinct-genres function tests"
+       (extract-distinct-genres [{:random_key "1234 " :Main-Genres "Action,Adventure,Comedy"},
+                                 {:rfff "fdfd" :Main-Genres ""}]) => ["Action" "Adventure" "Comedy"]
+       (extract-distinct-genres [{:random_key "1234 " :Main-Genres "Akcija,Drama,"},
+                                 {:rfff "fdfd" :Main-Genres "Triler,Drama"}]) => ["Akcija" "Drama" "Triler"]
+       (extract-distinct-genres [{:random_key "1234 " :Main-Genres ""},
+                                 {:rfff "fdfd" :Main-Genres ""}]) => []
+       (extract-distinct-genres [{:random_key "1234 " :Main-Genres ","},
+                                 {:rfff "fdfd" :Main-Genres "Triler"}]) => [ "Triler"]
+       )
+
+(facts "Create-genre-map fn tests"
+       (create-genre-map ["Action" "Komedija" "Triler"]) => {:Action 0, :Komedija 0, :Triler 0}
+       (create-genre-map []) => {}
+       (create-genre-map [ "Komedija"]) => { :Komedija 0}
+       )
+
+(facts "encode-genres fn tests"
+       (encode-genres ["Triler" "Komedija" "Akcija"] ["Komedija"]) => {:Triler 0, :Akcija 0, :Komedija 1}
+       (encode-genres ["Akcija" "Romansa"] [])=> {:Akcija 0 :Romansa 0} )
+
+(facts "Add-genre-columns functiob tests"
+       (add-genre-columns {:prva "a" :druga "v" :Main-Genres "Akcija,Romansa"} ["Akcija" "Romansa"])
+       => {:prva "a" :druga "v" :Main-Genres "Akcija,Romansa" :Akcija 1 :Romansa 1}
+       (add-genre-columns {:prva "a" :druga "v" :Main-Genres "Akcija,Romansa"} ["Akcija" "Romansa" "Triler"])
+       => {:prva "a" :druga "v" :Main-Genres "Akcija,Romansa" :Akcija 1 :Romansa 1 :Triler 0}
+       (add-genre-columns {:prva "a" :druga "v" :Main-Genres ""} ["Akcija" "Romansa"])
+       => {:prva "a" :druga "v" :Main-Genres "" :Akcija 0 :Romansa 0}
+       )

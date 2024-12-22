@@ -151,6 +151,7 @@
 ;;because Opening-Weekend-Gross-in-US-&-Canada has 37.3% of all values NA, 
 ;;it won't be included in analysis
 
+
 (defn -main
   [& arg]
   (let [{:keys [header rows]} (process-data "resources/IMDbMovies.csv")]
@@ -163,7 +164,9 @@
     (println "===============================")
     (println "We need to clean values so that we can handle NA values.")
     ;;(println (get-all-currency-prefixes rows))
-    (clean/process-and-save-data "resources/cleanedCSV.csv" header rows)
+     (clean/process-and-save-data "resources/cleanedCSV.csv" header rows)
+  ;; (println (clean/extract-distinct-genres rows))
+    
     ))
 
   

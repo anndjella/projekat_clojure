@@ -2,7 +2,8 @@
   (:require [clojure.data.csv :as csv]
             [clojure.java.io :as io]
             [clojure.string :as str]
-            [projekat.cleaning :as clean]))
+            [projekat.cleaning :as clean]
+            [projekat.imputation :as imputation]))
 
 (defn load-csv
   "Loads csv"
@@ -38,6 +39,7 @@
         mapped-data (map #(row-to-map header %) rows)]
     {:header header
      :rows mapped-data}))
+
 
 (take 4 (:rows (process-data "resources/IMDbMovies.csv")) )
 
@@ -152,6 +154,18 @@
 ;;it won't be included in analysis
 
 
+(defn get-all-distinct-rated
+  [rows]
+  (let [rated (map :Motion-Picture-Rating rows)]
+   (distinct (remove nil? rated))))
+;;Motion-Picture-Rating column has a lot of distinct values (29) for categorical feature 
+;;also it has a lot of missing values (8.8%) so it will be dismissed from analysis
+
+;;also Summary, Director, Title and Writer features will be dismissed because they are string
+;;and hard to convert to something categorical or numerical
+
+ 
+
 (defn -main
   [& arg]
   (let [{:keys [header rows]} (process-data "resources/IMDbMovies.csv")]
@@ -164,9 +178,10 @@
     (println "===============================")
     (println "We need to clean values so that we can handle NA values.")
     ;;(println (get-all-currency-prefixes rows))
-     (clean/process-and-save-data "resources/cleanedCSV.csv" header rows)
-  ;; (println (clean/extract-distinct-genres rows))
-    
+    ;;(println (get-all-distinct-rated rows))
+    ;;  (clean/process-and-save-data "resources/cleanedCSV.csv" header rows)
+  ;; (println (clean/extract-distinct-genres rows)) 
+    (imputation/process-csv "resources/cleanedCSV.csv" "resources/finalCleanCSV.csv")
     ))
 
   

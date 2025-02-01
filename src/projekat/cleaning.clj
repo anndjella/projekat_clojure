@@ -206,12 +206,16 @@
                   (clean-num-of-ratings) 
                   (add-genre-columns all-genres)
                   (dissoc :Budget :Rating :Runtime :Number-of-Ratings 
-                          :Gross-in-US-&-Canada :Gross-worldwide :Main-Genres))
+                          :Gross-in-US-&-Canada :Gross-worldwide :Main-Genres
+                          :Opening-Weekend-Gross-in-US-&-Canada
+                          :Summary :Writer :Director :Title :Motion-Picture-Rating ))
              rows) 
         genre-keywords (map keyword all-genres)
         header-with-budget (->> header
                               (remove #{:Budget :Rating :Runtime :Number-of-Ratings 
-                                        :Gross-in-US-&-Canada :Gross-worldwide :Main-Genres})
+                                        :Gross-in-US-&-Canada :Gross-worldwide :Main-Genres 
+                                        :Opening-Weekend-Gross-in-US-&-Canada 
+                                        :Summary :Writer :Director :Title :Motion-Picture-Rating })
                               (concat [:Budget-Cleaned :Rating-Cleaned :Runtime-Cleaned
                                        :Num-of-Ratings-Cleaned :Gross-in-US-&-Canada-Cleaned 
                                        :Gross-worldwide-Cleaned] genre-keywords)

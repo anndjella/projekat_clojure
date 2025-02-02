@@ -1,6 +1,7 @@
 (ns projekat.core-test
   (:require [clojure.test :refer :all]
             [projekat.cleaning :refer :all]
+            [projekat.imputation :refer :all]
             [midje.sweet :refer [facts => throws]]))
 
 (facts "Parse-budget function test"
@@ -104,3 +105,41 @@
        (add-genre-columns {:prva "a" :druga "v" :Main-Genres ""} ["Akcija" "Romansa"])
        => {:prva "a" :druga "v" :Main-Genres "" :Akcija 0 :Romansa 0}
        )
+;;;;;;imputation tests;;;;;
+
+(facts "Parse-value tests"
+       (parse-value "42") => 42.0
+       (parse-value "3.14") => 3.14
+       (parse-value "2.5E3") => 2500.0
+       (parse-value "1.2e-2") => 0.012
+       (parse-value nil) => nil
+       (parse-value "") => nil
+       (parse-value "   ") => nil
+       (parse-value "Hello") => "Hello" 
+       (parse-value "2023-07-05") => "2023-07-05")
+
+(facts "is-empty tests"
+       (is-empty? "") => true
+       (is-empty? " ") => true
+       (is-empty? "d") => false
+       (is-empty? nil) => true)
+
+(facts "calculate-mean tests"
+        (calculate-mean [{:col1 "10"} {:col1 "20"} {:col1 "30"}] :col1) => 20.0
+       (calculate-mean [{:col2 "10.25"} {:col2 "20.75"} {:col2 "30.5"}] :col2) => 20.5
+       (calculate-mean [{:Release-Year "1999"} {:Release-Year "2001"} {:Release-Year "2003"}] :Release-Year) => 2001
+       (calculate-mean [{:col3 "10"} {:col3 nil} {:col3 ""} {:col3 "20"} {:col3 "30"}] :col3) => 20.0 
+       (calculate-mean [{:col4 nil} {:col4 ""} {:col4 nil}] :col4) => nil)
+
+(facts "fill-missing tests"
+       (let [rows [{:rating 3 :Budget-Cleaned 30} {:rating 10 :Budget-Cleaned nil} {:rating 7 :Budget-Cleaned 25}]
+             expected [{:rating 3 :Budget-Cleaned 30} {:rating 10 :Budget-Cleaned 27.5} {:rating 7 :Budget-Cleaned 25}]] 
+         (fill-missing rows :Budget-Cleaned) => expected)
+       
+       (let [rows [{:rating 3 :Budget-Cleaned nil} {:rating 10 :Budget-Cleaned nil} {:rating 7 :Budget-Cleaned nil}]
+             expected [{:rating 3 :Budget-Cleaned nil} {:rating 10 :Budget-Cleaned nil} {:rating 7 :Budget-Cleaned nil}]]
+         (fill-missing rows :Budget-Cleaned) => expected)
+       
+       (let [rows [{:rating 3 :Budget-Cleaned 30} {:rating 10 :Budget-Cleaned 667} {:rating 7 :Budget-Cleaned 2545}]
+             expected [{:rating 3 :Budget-Cleaned 30} {:rating 10 :Budget-Cleaned 667} {:rating 7 :Budget-Cleaned 2545}]]
+         (fill-missing rows :Budget-Cleaned) => expected))

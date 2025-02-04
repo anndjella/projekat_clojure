@@ -11,8 +11,8 @@
                  [seancorfield/next.jdbc "1.1.613"]
                  [org.xerial/sqlite-jdbc "3.36.0.3"]
                  [midje "1.10.9"]]
-  :main ^:skip-aot projekat.core
-  ;; :main ^:skip-aot projekat.dbWork
+  ;;:main ^:skip-aot projekat.core
+   :main ^:skip-aot projekat.dbWork
    ;;:main ^:skip-aot projekat.cleaning
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all

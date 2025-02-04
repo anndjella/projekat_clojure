@@ -181,7 +181,7 @@
     ;;(println (get-all-distinct-rated rows))
     ;;  (clean/process-and-save-data "resources/cleanedCSV.csv" header rows)
   ;; (println (clean/extract-distinct-genres rows)) 
-    (imputation/process-csv "resources/cleanedCSV.csv" "resources/finalCleanCSV.csv")
+    ;;(imputation/process-csv "resources/cleanedCSV.csv" "resources/finalCleanCSV.csv")
     ))
 
   

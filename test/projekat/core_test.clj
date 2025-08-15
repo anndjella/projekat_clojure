@@ -2,7 +2,9 @@
   (:require [clojure.test :refer :all]
             [projekat.cleaning :refer :all]
             [projekat.imputation :refer :all]
-            [midje.sweet :refer [facts => throws]]))
+            [projekat.correlation :refer :all]
+            [midje.sweet :refer :all]
+            ))
 
 (facts "Parse-budget function test"
        (parse-budget "$200,000,000 (estimated)") => 200000000.0
@@ -143,3 +145,12 @@
        (let [rows [{:rating 3 :Budget-Cleaned 30} {:rating 10 :Budget-Cleaned 667} {:rating 7 :Budget-Cleaned 2545}]
              expected [{:rating 3 :Budget-Cleaned 30} {:rating 10 :Budget-Cleaned 667} {:rating 7 :Budget-Cleaned 2545}]]
          (fill-missing rows :Budget-Cleaned) => expected))
+
+;;===============corr tests======================
+(facts "correlations-to-rating tests"
+       (correlations-to-rating [1 2 3] [2 4 6]) => 1.0
+       (correlations-to-rating [1 2 3 4] [8 6 4 2]) => (roughly -1.0 1e-12)
+       (Double/isNaN (double (correlations-to-rating [1 1 1] [5 6 7]))) => true
+       (correlations-to-rating [1 2] [1]) => (throws Exception))
+
+

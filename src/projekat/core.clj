@@ -3,6 +3,7 @@
             [clojure.java.io :as io]
             [clojure.string :as str]
             [projekat.cleaning :as clean]
+            [projekat.correlation :as corr]
             [projekat.imputation :as imputation]))
 
 (defn load-csv
@@ -176,12 +177,19 @@
     (println "===============================")
     (ratio-NA header rows)
     (println "===============================")
-    (println "We need to clean values so that we can handle NA values.")
+    (println "We need to clean values so that we can handle NA values...\n")
     ;;(println (get-all-currency-prefixes rows))
     ;;(println (get-all-distinct-rated rows))
     ;;  (clean/process-and-save-data "resources/cleanedCSV.csv" header rows)
+      (println "Values are successfully cleaned and put in cleanedCSV. 
+                      Variable Main-Genres has been one-hot encoded.\n")
   ;; (println (clean/extract-distinct-genres rows)) 
+    (println "We need to replace NA values with mean of corresponding column...\n")
     ;;(imputation/process-csv "resources/cleanedCSV.csv" "resources/finalCleanCSV.csv")
+    (println "NA values are successfully replaced and put in finalCleanCSV.\n")
+    (println "We need to decide which variables to include in analysis and for that 
+                  we need to inspect their correlations with Rating variable...\n")
+    
     ))
 
   

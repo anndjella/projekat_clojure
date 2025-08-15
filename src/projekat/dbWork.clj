@@ -4,7 +4,6 @@
    [next.jdbc.sql :as sql] 
    [clojure.data.csv :as csv]
    [clojure.java.io :as io]
-   [projekat.core :as core] 
    [clojure.string :as str]
    [projekat.imputation :as imputation]))
 
@@ -56,7 +55,9 @@
 (defn process-row [row]
   (vec (map parse-number row)))
 
-(defn import-csv-to-db [db-spec csv-path]
+(defn import-csv-to-db [db-spec csv-path] 
+  (jdbc/execute! db-spec ["DELETE FROM movies"])
+  (jdbc/execute! db-spec ["DELETE FROM sqlite_sequence WHERE name='movies'"])
   (with-open [reader (io/reader csv-path)]
     (let [data (csv/read-csv reader)
           header (first data)
@@ -92,6 +93,14 @@
   [id]
   (jdbc/execute! db-spec
     ["delete from movies where id =?" id]))
+
+(defn fetch-data [limit]
+  (jdbc/execute! db-spec
+                 ["select * from movies limit ?" limit]))
+
+(defn fetch-all-data []
+  (jdbc/execute! db-spec
+                 ["select * from movies"]))
 
 (defn -main
   [& args]

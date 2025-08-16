@@ -147,25 +147,19 @@
          (fill-missing rows :Budget-Cleaned) => expected))
 
 ;;===============corr tests======================
-;; (facts "correlations-to-rating tests"
-;;        (correlations-to-rating [{:rating 1.0 :runtime 2.0}
-;;                                  {:rating 2.0 :runtime 4.0}
-;;                                 {:rating 3.0 :runtime 6.0}]
-;;                                 :rating :runtime) => 1.0
-;;        (correlations-to-rating [{:rating 1.0 :runtime 6.0}
-;;                                  {:rating 2.0 :runtime 4.0}
-;;                                 {:rating 3.0 :runtime 2.0}]
-;;                                :rating :runtime) => (roughly -1.0 1e-12)
-;;       (Double/isNaN (double 
-;;                           (correlations-to-rating
-;;                          [{:rating 1.0 :runtime 5.0}
-;;                           {:rating 1.0 :runtime 6.0}
-;;                            {:rating 1.0 :runtime 7.0}]
-;;                           :rating :runtime))) => true
-;;        (correlations-to-rating [{:rating 1.0 :runtime 2.0}
-;;                                 {:rating 2.0 :runtime 4.0}]
-;;                                  :rating
-;;                    (fn [row] (if (= (:rating row) 1.0)
-;;                                    (:runtime row)
-;;                                 nil))) => (throws Exception))
+(facts "correlations-to-rating tests"
+       (correlations-to-rating [{:rating 1.0 :runtime 2.0}
+                                 {:rating 2.0 :runtime 4.0}
+                                {:rating 3.0 :runtime 6.0}]
+                                :rating) => {:runtime 1.0}
+
+       (correlations-to-rating [{:rating 1.0 :runtime 6.0}
+                                 {:rating 2.0 :runtime 4.0}
+                                {:rating 3.0 :runtime 2.0}]
+                               :rating)  => {:runtime -1.0}
+       
+       (correlations-to-rating [{:rating 1.0 :runtime 6.0}
+                                {:rating 2.0 :runtime nil}
+                                {:rating 3.0 :runtime 2.0}]
+                               :rating) => (throws Exception))
 

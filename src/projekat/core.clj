@@ -189,7 +189,7 @@
     (println "NA values are successfully replaced and put in finalCleanCSV.\n")
     (println "We need to decide which variables to include in analysis and for that 
                   we need to inspect their correlations with Rating variable...\n")
-    
+    (corr/analyze-correlation)
     ))
 
   

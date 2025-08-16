@@ -1,8 +1,7 @@
 (ns projekat.cleaning
   (:require [clojure.data.csv :as csv]
             [clojure.java.io :as io]
-            [clojure.string :as str]
-            [projekat.cleaning :as clean]))
+            [clojure.string :as str]))
 
 (defn detect-currency [value]
     (cond

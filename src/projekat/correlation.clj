@@ -31,7 +31,8 @@
 (def corrs (correlations-to-rating (db/fetch-all-data) :movies/rating_cleaned))
 
 
-(let [sorted (sort-by val > corrs)   
+(defn show-corr-chart []
+  (let [sorted (sort-by val > corrs)   
       labels (map (comp name key) sorted)
       values (map val sorted)
       chart  (charts/bar-chart labels values
@@ -39,7 +40,7 @@
                                :y-label "Correlation with rating_cleaned")]
   (-> chart .getCategoryPlot .getDomainAxis
       (.setCategoryLabelPositions CategoryLabelPositions/UP_45))
-  (view chart :width 1400 :height 800))
+  (view chart :width 1400 :height 800)))
 
 
 
@@ -57,3 +58,28 @@
 ;; (map (fn [c] [c (stats/correlation (mapv :rating [{:rating 1.0 :runtime 2.0} {:rating 2.0 :runtime 4.0} {:rating 3.0 :runtime 6.0}]) (mapv c [{:rating 1.0 :runtime 2.0} {:rating 2.0 :runtime 4.0} {:rating 3.0 :runtime 6.0}]))]) [:rating :runtime])
 
 
+
+(defn multicollinear-pairs
+  [data threshold]
+  (let [cols (vec (remove #{:movies/rating_cleaned :movies/id} (keys (first data))))
+        n    (count cols)]
+    (->> (for [i (range n), j (range (inc i) n)]
+           (let [xi (mapv (nth cols i) data)
+                 xj (mapv (nth cols j) data)
+                 r  (stats/correlation xi xj)]
+             [(nth cols i) (nth cols j) r]))
+         (filter #(>= (Math/abs (nth % 2)) threshold)))))
+
+;; (multicollinear-pairs
+;;  [{:movies/id 1 :x 1.0 :y 2.0 :z 8.0 :movies/rating_cleaned 10.0}
+;;   {:movies/id 2 :x 2.0 :y 4.0 :z 6.0 :movies/rating_cleaned  9.0}
+;;   {:movies/id 3 :x 3.0 :y 6.0 :z 4.0 :movies/rating_cleaned  8.0}
+;;   {:movies/id 4 :x 4.0 :y 8.0 :z 2.0 :movies/rating_cleaned  7.0}]
+;;  0.9)
+
+(defn print-multicollinearity
+  ([threshold]
+   (doseq [[a b r] (multicollinear-pairs (db/fetch-all-data) threshold)]
+     (println (format "%s <> %s : r=%.4f" (name a) (name b) r)))))
+
+;; (print-multicollinearity 0.8)

@@ -4,6 +4,7 @@
             [projekat.imputation :refer :all]
             [projekat.correlation :refer :all]
             [midje.sweet :refer :all]
+            [projekat.dbWork :refer :all]
             ))
 
 (facts "Parse-budget function test"
@@ -202,4 +203,8 @@
             (contains :y :z (roughly -1.0 1e-12))]
            :in-any-order))
 
-
+;;db tests
+(facts  "split-train-test-rows tests"
+ (split-train-test-rows [1 2 3 4 5 6 ] 1)=> {:train [1 2 3 4 5 6] :test []}
+ (split-train-test-rows [1 2 3 4 5 6] 0.2) => {:train [1] :test [2 3 4 5 6]}
+ (split-train-test-rows [1 2 3 4 5 6] 2) => (throws Exception))

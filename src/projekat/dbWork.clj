@@ -142,18 +142,16 @@
   (create-empty-like tx "movies_train")
   (create-empty-like tx "movies_test"))
 
-;; (def sel #{:rating_cleaned :runtime_cleaned})
-;; (def cols-info [{:name "rating_cleaned" :type "REAL"}
-;;                 {:name "gross_worldwide_cleaned" :type "REAL"}])
-;; (print cols-info)
 
-;; (filter (comp sel keyword :name) cols-info)
-;; => ({:name "rating_cleaned" :type "REAL"})
+(defn split-train-test-rows
+  [rows ratio]
+  (let [v (vec rows)
+        k (int (* ratio (count v)))]
+    {:train (subvec v 0 k)
+     :test  (subvec v k)}))
 
+;; (split-train-test-rows [1,2,3,4,5,6] 0.2)
 
-
-;; (with-open [c (jdbc/get-connection db-spec)]
-;;   (jdbc/execute! c ["PRAGMA table_info(movies)"]))
 
 
 (defn -main

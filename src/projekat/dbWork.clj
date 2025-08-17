@@ -1,18 +1,19 @@
 (ns projekat.dbWork
   (:require
    [next.jdbc :as jdbc]
-   [next.jdbc.sql :as sql] 
+   [next.jdbc.sql :as sql]
    [clojure.data.csv :as csv]
    [clojure.java.io :as io]
    [clojure.string :as str]
-   [projekat.imputation :as imputation]))
+   [projekat.imputation :as imputation]
+   [next.jdbc.result-set :as rs]))
 
 (def db-spec
   {:dbtype "sqlite"
    :dbname "resources/database.db"})
 
 (defn create-movies-table []
-  (jdbc/execute! db-spec 
+  (jdbc/execute! db-spec
                  ["CREATE TABLE movies (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     budget_cleaned REAL,
@@ -55,7 +56,7 @@
 (defn process-row [row]
   (vec (map parse-number row)))
 
-(defn import-csv-to-db [db-spec csv-path] 
+(defn import-csv-to-db [db-spec csv-path]
   (jdbc/execute! db-spec ["DELETE FROM movies"])
   (jdbc/execute! db-spec ["DELETE FROM sqlite_sequence WHERE name='movies'"])
   (with-open [reader (io/reader csv-path)]
@@ -92,7 +93,7 @@
 (defn delete-movie
   [id]
   (jdbc/execute! db-spec
-    ["delete from movies where id =?" id]))
+                 ["delete from movies where id =?" id]))
 
 (defn fetch-data [limit]
   (jdbc/execute! db-spec
@@ -102,10 +103,62 @@
   (jdbc/execute! db-spec
                  ["select * from movies"]))
 
+
+
+(def ds (jdbc/get-datasource db-spec))
+
+(def selected-cols
+  [:rating_cleaned :num_of_ratings_cleaned :runtime_cleaned :drama :biography :war :history :documentary
+   :animation :thriller :action :comedy :horror :release_year])
+;; (set selected-cols)
+;; (print selected-cols)
+
+
+;; (defn table-info
+;;   [exec table]  
+;;   (jdbc/execute! exec
+;;                  [(format "PRAGMA table_info(%s)" (name table))]
+;;                  {:builder-fn rs/as-unqualified-lower-maps}))
+
+;; (defn movies-cols-info [] (table-info ds :movies))
+;; (filter #(some #{(keyword (:name %))} selected-cols)
+;;         (movies-cols-info))
+
+(defn create-empty-like
+  "Creates empty table with same tipes as movies table, only for selected-cols."
+  [conn target]
+  (let [cols-info     (jdbc/execute! conn ["PRAGMA table_info(movies)"]
+                                     {:builder-fn rs/as-unqualified-lower-maps})
+        sel           (set selected-cols)
+        selected-info (filter (comp sel keyword :name) cols-info)
+        cols-ddl      (->> selected-info
+                           (map (fn [{:keys [name type]}]
+                                  (format "%s %s" name type)))
+                           (str/join ", "))]
+    (jdbc/execute! conn [(format "DROP TABLE IF EXISTS %s" target)])
+    (jdbc/execute! conn [(format "CREATE TABLE %s (%s)" target cols-ddl)])))
+
+(jdbc/with-transaction [tx ds]
+  (create-empty-like tx "movies_train")
+  (create-empty-like tx "movies_test"))
+
+;; (def sel #{:rating_cleaned :runtime_cleaned})
+;; (def cols-info [{:name "rating_cleaned" :type "REAL"}
+;;                 {:name "gross_worldwide_cleaned" :type "REAL"}])
+;; (print cols-info)
+
+;; (filter (comp sel keyword :name) cols-info)
+;; => ({:name "rating_cleaned" :type "REAL"})
+
+
+
+;; (with-open [c (jdbc/get-connection db-spec)]
+;;   (jdbc/execute! c ["PRAGMA table_info(movies)"]))
+
+
 (defn -main
   [& args]
   ;; (create-movies-table)   
   ;; (insert-random-movie)) 
   ;;  (delete-movie 1)
- (import-csv-to-db db-spec "resources/finalCleanCSV.csv")
-  )
+  (import-csv-to-db db-spec "resources/finalCleanCSV.csv"))

@@ -108,21 +108,9 @@
 (def ds (jdbc/get-datasource db-spec))
 
 (def selected-cols
-  [:rating_cleaned :num_of_ratings_cleaned :runtime_cleaned :drama :biography :war :history :documentary
+  "Column id is not a feature but it is useful to have ID in train and test datasets"
+  [:id :rating_cleaned :num_of_ratings_cleaned :runtime_cleaned :drama :biography :war :history :documentary
    :animation :thriller :action :comedy :horror :release_year])
-;; (set selected-cols)
-;; (print selected-cols)
-
-
-;; (defn table-info
-;;   [exec table]  
-;;   (jdbc/execute! exec
-;;                  [(format "PRAGMA table_info(%s)" (name table))]
-;;                  {:builder-fn rs/as-unqualified-lower-maps}))
-
-;; (defn movies-cols-info [] (table-info ds :movies))
-;; (filter #(some #{(keyword (:name %))} selected-cols)
-;;         (movies-cols-info))
 
 (defn create-empty-like
   "Creates empty table with same tipes as movies table, only for selected-cols."
@@ -138,10 +126,6 @@
     (jdbc/execute! conn [(format "DROP TABLE IF EXISTS %s" target)])
     (jdbc/execute! conn [(format "CREATE TABLE %s (%s)" target cols-ddl)])))
 
-(jdbc/with-transaction [tx ds]
-  (create-empty-like tx "movies_train")
-  (create-empty-like tx "movies_test"))
-
 (defn shuffle-with-seed
   "Shuffles a collection"
   ([coll seed]
@@ -149,8 +133,6 @@
          rnd   (java.util.Random. (long seed))]
      (java.util.Collections/shuffle alist rnd)
      (vec alist))))
-;; (shuffle-with-seed [1 2 3 4 5 6 7] 24)
-
 
 (defn split-train-test-rows
   "Splits collection to train  and test, using ratio (must be in (0,1)) for spliting and seed"
@@ -162,13 +144,33 @@
     {:train (subvec v 0 k)
      :test  (subvec v k)}))
 
-;; (split-train-test-rows [1,2,3,4,5,6] 0.1 23)
+(def selected-cols-sql
+  (clojure.string/join ", " (map name selected-cols)))
 
-
+(defn insert-data-train-test
+  "Inserts data from Movies table to movies_train and movies_test"
+  [ratio seed]
+  (with-open [conn (jdbc/get-connection db-spec)]
+    (jdbc/with-transaction [tx conn]
+      (let [rows                  (vec (jdbc/execute! tx [(str "SELECT " selected-cols-sql " FROM movies")]
+                                                      {:builder-fn rs/as-unqualified-lower-maps}))
+            {:keys [train test]}  (split-train-test-rows rows ratio seed)
+            row-vals             (apply juxt selected-cols)
+            train-data            (mapv row-vals train)
+            test-data             (mapv row-vals test)]
+        (create-empty-like tx "movies_train")
+        (create-empty-like tx "movies_test")
+        (sql/insert-multi! tx "movies_train" selected-cols train-data)
+        (sql/insert-multi! tx "movies_test"  selected-cols test-data)
+        (let [msg (format "Successfully wrote to DB — Train: %d rows | Test: %d rows"
+                          (count train) (count test))]
+          (println msg)
+          {:message msg :train-count (count train) :test-count (count test)})))))
 
 (defn -main
   [& args]
   ;; (create-movies-table)   
   ;; (insert-random-movie)) 
   ;;  (delete-movie 1)
-  (import-csv-to-db db-spec "resources/finalCleanCSV.csv"))
+  ;; (import-csv-to-db db-spec "resources/finalCleanCSV.csv")
+  )

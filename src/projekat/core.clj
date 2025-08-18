@@ -4,7 +4,8 @@
             [clojure.string :as str]
             [projekat.cleaning :as clean]
             [projekat.correlation :as corr]
-            [projekat.imputation :as imputation]))
+            [projekat.imputation :as imputation]
+            [projekat.dbWork :as db]))
 
 (defn load-csv
   "Loads csv"
@@ -212,7 +213,8 @@
                  gross_worldwide_cleaned <> gross_in_us_canada_cleaned (r=0.9165). 
                  However, all 'gross*' variables were already excluded due to 
                  missing values, so we proceed with the remaining features"))
-   (println "\nNext, we split the movies dataset into training and test datasets (movies_train, movies_test)")
+   (println "\nNext, we split the movies dataset into training (80%) and test (20%) datasets (movies_train, movies_test)")
+   (db/insert-data-train-test 0.8 26)
    )
 
 (defn -main

@@ -205,6 +205,7 @@
 
 ;;db tests
 (facts  "split-train-test-rows tests"
- (split-train-test-rows [1 2 3 4 5 6 ] 1)=> {:train [1 2 3 4 5 6] :test []}
- (split-train-test-rows [1 2 3 4 5 6] 0.2) => {:train [1] :test [2 3 4 5 6]}
- (split-train-test-rows [1 2 3 4 5 6] 2) => (throws Exception))
+ (split-train-test-rows [1 2 3 4 5 6 ] 1 23)=> (throws Exception)
+ (split-train-test-rows [1 2 3 4 5 6] 0.2 23) => {:train [6] :test [3 5 1 4 2]}
+ (split-train-test-rows [1 2 3 4 5 6] 0.8 23) => {:train [6 3 5 1 ] :test [4 2]}
+ (split-train-test-rows [1 2 3 4 5 6] 2 23) => (throws Exception))

@@ -142,15 +142,27 @@
   (create-empty-like tx "movies_train")
   (create-empty-like tx "movies_test"))
 
+(defn shuffle-with-seed
+  "Shuffles a collection"
+  ([coll seed]
+   (let [alist (java.util.ArrayList. coll)
+         rnd   (java.util.Random. (long seed))]
+     (java.util.Collections/shuffle alist rnd)
+     (vec alist))))
+;; (shuffle-with-seed [1 2 3 4 5 6 7] 24)
+
 
 (defn split-train-test-rows
-  [rows ratio]
-  (let [v (vec rows)
+  "Splits collection to train  and test, using ratio (must be in (0,1)) for spliting and seed"
+  [rows ratio seed]
+  (when (or (not (number? ratio)) (<= ratio 0) (>= ratio 1))
+    (throw (ex-info "ratio must be in (0,1)" {:ratio ratio})))
+  (let [v (vec (shuffle-with-seed rows seed))
         k (int (* ratio (count v)))]
     {:train (subvec v 0 k)
      :test  (subvec v k)}))
 
-;; (split-train-test-rows [1,2,3,4,5,6] 0.2)
+;; (split-train-test-rows [1,2,3,4,5,6] 0.1 23)
 
 
 

@@ -99,13 +99,10 @@
   (jdbc/execute! db-spec
                  ["select * from movies limit ?" limit]))
 
-(defn fetch-all-data []
-  (jdbc/execute! db-spec
-                 ["select * from movies"]))
+(defn fetch-all-data 
+  [table-name]
+  (jdbc/execute! db-spec [(str "SELECT * FROM " table-name)]))
 
-
-
-(def ds (jdbc/get-datasource db-spec))
 
 (def selected-cols
   "Column id is not a feature but it is useful to have ID in train and test datasets"

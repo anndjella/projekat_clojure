@@ -22,13 +22,13 @@
 
 (defn analyze-correlation
   []
-  (let [data (db/fetch-all-data)]
+  (let [data (db/fetch-all-data "movies")]
     (println "\nCorrelations with rating_cleaned:")
     (-> data
         (correlations-to-rating :movies/rating_cleaned) 
         (print-correlations))))
 
-(def corrs (correlations-to-rating (db/fetch-all-data) :movies/rating_cleaned))
+(def corrs (correlations-to-rating (db/fetch-all-data "movies") :movies/rating_cleaned))
 
 
 (defn show-corr-chart []
@@ -44,8 +44,7 @@
 
 
 
-
-(correlations-to-rating  (db/fetch-all-data) :movies/rating_cleaned)
+(correlations-to-rating  (db/fetch-all-data "movies") :movies/rating_cleaned)
 ;; (correlations-to-rating [{:rating 1.0 :runtime 2.0} {:rating 2.0 :runtime 4.0} {:rating 3.0 :runtime 6.0}] :rating)
 
 ;; (remove #{:movies/rating_cleaned :movies/id}(keys (first (db/fetch-all-data))))
@@ -79,7 +78,7 @@
 
 (defn print-multicollinearity
   ([threshold]
-   (doseq [[a b r] (multicollinear-pairs (db/fetch-all-data) threshold)]
+   (doseq [[a b r] (multicollinear-pairs (db/fetch-all-data "movies") threshold)]
      (println (format "%s <> %s : r=%.4f" (name a) (name b) r)))))
 
 ;; (print-multicollinearity 0.8)

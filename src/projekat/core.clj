@@ -214,7 +214,7 @@
                  However, all 'gross*' variables were already excluded due to 
                  missing values, so we proceed with the remaining features"))
    (println "\nNext, we split the movies dataset into training (80%) and test (20%) datasets (movies_train, movies_test)")
-   (db/insert-data-train-test 0.8 26)
+  ;;  (db/insert-data-train-test 0.8 26)
    )
 
 (defn -main

@@ -99,9 +99,9 @@
   (jdbc/execute! db-spec
                  ["select * from movies limit ?" limit]))
 
-(defn fetch-all-data 
-  [table-name]
-  (jdbc/execute! db-spec [(str "SELECT * FROM " table-name)]))
+ (defn fetch-all-data
+      [table-name]
+     (jdbc/execute! db-spec [(str "SELECT * FROM " table-name)]))
 
 
 (def selected-cols

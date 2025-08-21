@@ -1,22 +1,16 @@
 (ns projekat.lm
   (:require [incanter.core :as i]
             [incanter.stats :as stats]
-               [clojure.pprint :as pp] 
             [projekat.dbWork :as db]))
 
 (def selected-cols 
-  [ :runtime_cleaned :comedy ])
+  [ :num_of_ratings_cleaned :runtime_cleaned :drama :biography :war :history :documentary
+    :animation :thriller :action :comedy :horror :release_year ])
 
 (def target-col :rating_cleaned)
 
-(def train-rows [{:rating_cleaned 4.5 :runtime_cleaned 120, :horror 1, :comedy 0},
-                  {:rating_cleaned 6 :runtime_cleaned 23, :horror 1, :comedy 1},
-                  {:rating_cleaned 9.2 :runtime_cleaned 230, :horror 0, :comedy 0}
-                 {:rating_cleaned 8.6 :runtime_cleaned 123, :horror 1, :comedy 0}])
-
-(def test-rows [{:rating_cleaned 9.7 :runtime_cleaned 68, :horror 1, :comedy 1},
-                 {:rating_cleaned 7.5 :runtime_cleaned 98, :horror 1, :comedy 0}
-                 ])
+(defn unqualify-keys [row]
+  (into {} (map (fn [[k v]] [(-> k name keyword) v]) row)))
 
 (defn train-linear-model
    [train-rows]
@@ -46,20 +40,20 @@
     {:rmse (Math/sqrt (/ ssres n))
      :r2   (- 1.0 (/ ssres sstot))}))
 
-(def model (train-linear-model train-rows))
-(predict-y model test-rows)
 
-(def y-test     (mapv target-col test-rows))
-
-(def predicted-y  (predict-y model test-rows))
-
-(def eval-test  (evaluate y-test predicted-y))
-
-(evaluate y-test predicted-y)
 (defn -main []
-  (train-linear-model train-rows)
-(println "Test  metrics:" eval-test)
+  (let [train (mapv unqualify-keys (db/fetch-all-data "movies_train"))
+        test  (mapv unqualify-keys (db/fetch-all-data "movies_test"))
+        model (train-linear-model train)
+        y     (mapv target-col test)
+        y-predicted  (predict-y model test)
+        metrics  (evaluate y y-predicted)]
+    (println "Metrics:" metrics)
+    (println "Betas of model:")
+    (println "Intercept:" (first (:coefs model)))
+     (doseq [[k b] (map vector selected-cols (rest (:coefs model)))]
+      (println (format "%-22s %.6f" (name k) (double b)))))
 
 
-
+  
   )

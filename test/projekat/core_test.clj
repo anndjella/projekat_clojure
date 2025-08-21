@@ -4,7 +4,8 @@
             [projekat.imputation :refer :all]
             [projekat.correlation :refer :all]
             [midje.sweet :refer :all]
-            [projekat.dbWork :refer :all]
+            [projekat.dbWork :refer [split-train-test-rows]]
+            [projekat.lm :refer [train-linear-model predict-y evaluate target-col selected-cols]]
             ))
 
 (facts "Parse-budget function test"
@@ -209,3 +210,27 @@
  (split-train-test-rows [1 2 3 4 5 6] 0.2 23) => {:train [6] :test [3 5 1 4 2]}
  (split-train-test-rows [1 2 3 4 5 6] 0.8 23) => {:train [6 3 5 1 ] :test [4 2]}
  (split-train-test-rows [1 2 3 4 5 6] 2 23) => (throws Exception))
+
+;;lm tests
+(facts "predict-y"
+       
+       (with-redefs [selected-cols [:x]]
+         (predict-y {:coefs [0.0 2.0]}
+                    [{:x 1.0} {:x 2.0} {:x 3.0}]))
+       => (just 2.0 4.0 6.0)
+
+       (with-redefs [selected-cols [:x]]
+         (predict-y {:coefs [3.0 2.0]}
+                    [{:x 1.0} {:x 2.0} {:x 3.0}]))
+       => (just 5.0 7.0 9.0)
+
+       (with-redefs [selected-cols [:x :z]]
+         (predict-y {:coefs [1.0 2.0 3.0]}
+                    [{:x 1.0} {:x 2.0}]))
+       => (just 3.0 5.0))
+
+
+(facts "evaluate"
+       (evaluate [2.0 4.0 6.0] [2.0 4.0 6.0]) => {:rmse 0.0 :r2 1.0}
+      (evaluate [1.0 2.0 3.0] [1.0 2.0 4.0]) => {:rmse 0.5773502691896257 :r2 0.5}
+      (evaluate [1.0 2.0 3.0] [2.0 3.0 4.0]) => {:rmse 1.0 :r2 -0.5})

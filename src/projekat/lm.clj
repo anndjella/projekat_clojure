@@ -12,6 +12,40 @@
 (defn unqualify-keys [row]
   (into {} (map (fn [[k v]] [(-> k name keyword) v]) row)))
 
+
+(def numeric-cols [:num_of_ratings_cleaned :runtime_cleaned :release_year])
+
+(def log-before-std?
+  {:num_of_ratings_cleaned true
+   :runtime_cleaned        false
+   :release_year           false})
+
+
+(defn fit-stats [train-rows]
+  (into {}
+        (for [c numeric-cols
+              :let [lb?  (log-before-std? c)
+                    vals (mapv #(double (get % c 0.0)) train-rows)
+                    xs   (if lb? (mapv #(Math/log1p %) vals) vals)
+                    n    (count xs)
+                    mu   (if (pos? n) (stats/mean xs) 0.0)
+                    sd0  (if (> n 1)  (double (stats/sd xs)) 0.0) ; sample SD (n-1)
+                    sd   (if (pos? sd0) sd0 1.0)]]
+          [c {:mu mu :sd sd :log? lb?}])))
+
+
+(defn transform-row [stats row]
+  (reduce (fn [acc c]
+            (let [{:keys [mu sd log?]} (stats c)
+                  x (double (get acc c 0.0))
+                  x (if log? (Math/log1p x) x)]
+              (assoc acc c (/ (- x mu) sd))))
+          row numeric-cols))
+
+(defn fit-preprocess [train-rows]
+  (let [stats (fit-stats train-rows)]
+    {:transform-row #(transform-row stats %)}))
+
 (defn train-linear-model
    [train-rows]
    (let [  y    (mapv target-col train-rows)
@@ -35,15 +69,25 @@
   [y-test y-predicted]
   (let [n (count y-test)
         ybar (/ (reduce + y-test) n)
+         abs-errors (map (fn [a b] (Math/abs (double (- (double a) (double b)))))
+                        y-test y-predicted)
+         mae  (/ (reduce + abs-errors) n)
         ssres (reduce + (map (fn [a b] (let [e (- a b)] (* e e))) y-test y-predicted))
         sstot (reduce + (map (fn [a] (let [d (- a ybar)] (* d d))) y-test))]
     {:rmse (Math/sqrt (/ ssres n))
-     :r2   (- 1.0 (/ ssres sstot))}))
+     :mae mae
+     :r2   (if (zero? sstot)
+             0.0
+             (- 1.0 (/ ssres sstot)))}))
 
 
 (defn -main []
-  (let [train (mapv unqualify-keys (db/fetch-all-data "movies_train"))
-        test  (mapv unqualify-keys (db/fetch-all-data "movies_test"))
+  (let [train0 (mapv unqualify-keys (db/fetch-all-data "movies_train"))
+        test0  (mapv unqualify-keys (db/fetch-all-data "movies_test"))
+         {:keys [transform-row]} (fit-preprocess train0)
+         train (mapv transform-row train0)
+        test  (mapv transform-row test0)
+
         model (train-linear-model train)
         y     (mapv target-col test)
         y-predicted  (predict-y model test)
@@ -52,8 +96,12 @@
     (println "Betas of model:")
     (println "Intercept:" (first (:coefs model)))
      (doseq [[k b] (map vector selected-cols (rest (:coefs model)))]
-      (println (format "%-22s %.6f" (name k) (double b)))))
+      (println (format "%-22s %.6f" (name k) (double b))))
+    
+    
+    )
 
 
   
   )
+

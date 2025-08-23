@@ -5,7 +5,7 @@
             [projekat.correlation :refer :all]
             [midje.sweet :refer :all]
             [projekat.dbWork :refer [split-train-test-rows]]
-            [projekat.lm :refer [train-linear-model predict-y evaluate target-col selected-cols]]
+            [projekat.lm :refer :all]
             ))
 
 (facts "Parse-budget function test"
@@ -231,6 +231,29 @@
 
 
 (facts "evaluate"
-       (evaluate [2.0 4.0 6.0] [2.0 4.0 6.0]) => {:rmse 0.0 :r2 1.0}
-      (evaluate [1.0 2.0 3.0] [1.0 2.0 4.0]) => {:rmse 0.5773502691896257 :r2 0.5}
-      (evaluate [1.0 2.0 3.0] [2.0 3.0 4.0]) => {:rmse 1.0 :r2 -0.5})
+       (evaluate [2.0 4.0 6.0] [2.0 4.0 6.0]) => {:mae 0.0 :rmse 0.0 :r2 1.0}
+      (evaluate [1.0 2.0 3.0] [1.0 2.0 4.0]) => {:mae 0.3333333333333333 :rmse 0.5773502691896257 :r2 0.5}
+      (evaluate [1.0 2.0 3.0] [2.0 3.0 4.0]) => {:mae 1.0 :rmse 1.0 :r2 -0.5})
+
+(with-redefs [numeric-cols [:a :b]
+              log-before-std? {:a true :b false}]
+  (facts "fit-stats"
+         (let [train-rows [{:a 0.0 :b 10.0}
+                           {:a 3.0 :b 20.0}]
+               stats      (fit-stats train-rows)]
+           (stats :a) => (just {:log? true
+                                :mu   (roughly 0.6931471806 1e-9) 
+                                :sd   (roughly 0.9802581435 1e-9)} :in-any-order)
+           (stats :b) => (just {:log? false
+                                :mu   (roughly 15.0 1e-12)
+                                :sd   (roughly 7.0710678119 1e-9)} :in-any-order)))
+
+  (facts "transform-row"
+         (let [train-rows [{:a 0.0 :b 10.0}
+                           {:a 3.0 :b 20.0}]
+               stats      (fit-stats train-rows)
+               zrow       (transform-row stats {:a 3.0 :b 20.0})]
+           (:a zrow) => (roughly 0.70710678 1e-6)
+           (:b zrow) => (roughly 0.70710678 1e-6))))
+
+

@@ -3,9 +3,12 @@
             [incanter.stats :as stats]
             [projekat.dbWork :as db]))
 
-(def selected-cols 
-  [ :num_of_ratings_cleaned :runtime_cleaned :drama :biography :war :history :documentary
-    :animation :thriller :action :comedy :horror :release_year ])
+;; (def selected-cols 
+;;   [ :num_of_ratings_cleaned :runtime_cleaned :drama :biography :war :history :documentary
+;;     :animation :thriller :action :comedy :horror :release_year ])
+(def selected-cols
+  [:num_of_ratings_cleaned :runtime_cleaned :drama :biography :war :documentary
+   :animation  :action :comedy :horror :release_year])
 
 (def target-col :rating_cleaned)
 
@@ -80,28 +83,29 @@
              0.0
              (- 1.0 (/ ssres sstot)))}))
 
-
-(defn -main []
+(defn train-eval
+  []
   (let [train0 (mapv unqualify-keys (db/fetch-all-data "movies_train"))
         test0  (mapv unqualify-keys (db/fetch-all-data "movies_test"))
-         {:keys [transform-row]} (fit-preprocess train0)
-         train (mapv transform-row train0)
+        {:keys [transform-row]} (fit-preprocess train0)
+        train (mapv transform-row train0)
         test  (mapv transform-row test0)
-
+  
         model (train-linear-model train)
         y     (mapv target-col test)
         y-predicted  (predict-y model test)
-        metrics  (evaluate y y-predicted)]
+        metrics  (evaluate y y-predicted)
+        names (into [:intercept] selected-cols)
+        rows  (map vector names (:coefs model) (:t-tests model) (:t-probs model))]
     (println "Metrics:" metrics)
-    (println "Betas of model:")
-    (println "Intercept:" (first (:coefs model)))
-     (doseq [[k b] (map vector selected-cols (rest (:coefs model)))]
-      (println (format "%-22s %.6f" (name k) (double b))))
-    
-    
-    )
-
-
   
-  )
+    (println "Intercept:" (first (:coefs model)))
+    ;;  (doseq [[k b] (map vector selected-cols (rest (:coefs model)))]
+    ;;   (println (format "%-22s %.6f" (name k) (double b))))
+    (println "\nSignificance (sorted by p desc):")
+    (doseq [[nm b t p] (->> rows (drop 1) (sort-by (fn [[_ _ _ p]] p) >))]
+      (println (format "%-22s b=% .6f  t=% .3f  p=%.4f%s"
+                       (name nm) (double b) (double t) (double p)
+                       (if (> (double p) 0.05) "   <-- kandidat za brisanje" ""))))))
+
 

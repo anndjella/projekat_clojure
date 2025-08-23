@@ -5,6 +5,7 @@
             [projekat.cleaning :as clean]
             [projekat.correlation :as corr]
             [projekat.imputation :as imputation]
+            [projekat.lm :as lm]
             [projekat.dbWork :as db]))
 
 (defn load-csv
@@ -215,6 +216,8 @@
                  missing values, so we proceed with the remaining features"))
    (println "\nNext, we split the movies dataset into training (80%) and test (20%) datasets (movies_train, movies_test)")
   ;;  (db/insert-data-train-test 0.8 26)
+   (println "After splitting the dataset, we can proceed to train and evaluate our model\n")
+   (lm/train-eval)
    )
 
 (defn -main

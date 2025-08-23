@@ -1,11 +1,14 @@
 (ns projekat.core-test
   (:require [clojure.test :refer :all]
-            [projekat.cleaning :refer :all]
-            [projekat.imputation :refer :all]
-            [projekat.correlation :refer :all]
+            [projekat.cleaning :refer [add-genre-columns clean-budget clean-rating 
+                                       create-genre-map encode-genres extract-distinct-genres 
+                                       map-row parse-budget parse-genres parse-num-of-ratings
+                                       parse-rating parse-runtime]]
+            [projekat.imputation :refer [calculate-mean fill-missing is-empty? parse-value]]
+            [projekat.correlation :refer [correlations-to-rating multicollinear-pairs]]
             [midje.sweet :refer :all]
             [projekat.dbWork :refer [split-train-test-rows]]
-            [projekat.lm :refer :all]
+            [projekat.lm :refer [evaluate fit-stats log-before-std? numeric-cols predict-y selected-cols transform-row]]
             ))
 
 (facts "Parse-budget function test"

@@ -12,10 +12,6 @@
 
 (def target-col :rating_cleaned)
 
-(defn unqualify-keys [row]
-  (into {} (map (fn [[k v]] [(-> k name keyword) v]) row)))
-
-
 (def numeric-cols [:num_of_ratings_cleaned :runtime_cleaned :release_year])
 
 (def log-before-std?
@@ -84,10 +80,8 @@
              (- 1.0 (/ ssres sstot)))}))
 
 (defn train-eval
-  []
-  (let [train0 (mapv unqualify-keys (db/fetch-all-data "movies_train"))
-        test0  (mapv unqualify-keys (db/fetch-all-data "movies_test"))
-        {:keys [transform-row]} (fit-preprocess train0)
+  [train0 test0]
+  (let [{:keys [transform-row]} (fit-preprocess train0)
         train (mapv transform-row train0)
         test  (mapv transform-row test0)
   
@@ -107,5 +101,3 @@
       (println (format "%-22s b=% .6f  t=% .3f  p=%.4f%s"
                        (name nm) (double b) (double t) (double p)
                        (if (> (double p) 0.05) "   <-- kandidat za brisanje" ""))))))
-
-

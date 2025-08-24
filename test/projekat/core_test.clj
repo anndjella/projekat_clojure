@@ -172,10 +172,10 @@
 (facts "multicollinear-pairs tests"
 
        (multicollinear-pairs
-        [{:movies/id 1 :x 1.0 :y 2.0 :z 8.0 :movies/rating_cleaned 10.0}
-         {:movies/id 2 :x 2.0 :y 4.0 :z 6.0 :movies/rating_cleaned  9.0}
-         {:movies/id 3 :x 3.0 :y 6.0 :z 4.0 :movies/rating_cleaned  8.0}
-         {:movies/id 4 :x 4.0 :y 8.0 :z 2.0 :movies/rating_cleaned  7.0}]
+        [{:id 1 :x 1.0 :y 2.0 :z 8.0 :rating_cleaned 10.0}
+         {:id 2 :x 2.0 :y 4.0 :z 6.0 :rating_cleaned 9.0}
+         {:id 3 :x 3.0 :y 6.0 :z 4.0 :rating_cleaned 8.0}
+         {:id 4 :x 4.0 :y 8.0 :z 2.0 :rating_cleaned 7.0}]
         0.9)
        => (contains
            [(contains :x :y (roughly  1.0 1e-12))
@@ -184,10 +184,10 @@
            :in-any-order)
 
        (multicollinear-pairs
-        [{:movies/id 1 :x 1.0 :y 2.0 :z 8.0 :movies/rating_cleaned 10.0}
-         {:movies/id 2 :x 2.0 :y 4.0 :z 6.0 :movies/rating_cleaned  9.0}
-         {:movies/id 3 :x 3.0 :y 6.0 :z 4.0 :movies/rating_cleaned  8.0}
-         {:movies/id 4 :x 4.0 :y 8.0 :z 2.0 :movies/rating_cleaned  7.0}]
+        [{:id 1 :x 1.0 :y 2.0 :z 8.0 :rating_cleaned 10.0}
+         {:id 2 :x 2.0 :y 4.0 :z 6.0 :rating_cleaned 9.0}
+         {:id 3 :x 3.0 :y 6.0 :z 4.0 :rating_cleaned 8.0}
+         {:id 4 :x 4.0 :y 8.0 :z 2.0 :rating_cleaned 7.0}]
         1.0)
        => (contains
            [(contains :x :y (roughly  1.0 1e-12))

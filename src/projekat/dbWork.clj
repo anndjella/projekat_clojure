@@ -99,10 +99,15 @@
   (jdbc/execute! db-spec
                  ["select * from movies limit ?" limit]))
 
- (defn fetch-all-data
-      [table-name]
-     (jdbc/execute! db-spec [(str "SELECT * FROM " table-name)]))
+;;  (defn fetch-all-data
+;;       [table-name]
+;;      (jdbc/execute! db-spec [(str "SELECT * FROM " table-name)]))
 
+(defn fetch-all-data
+  [table-name]
+  (jdbc/execute! db-spec
+                 [(str "SELECT * FROM " table-name)]
+                 {:builder-fn rs/as-unqualified-lower-maps}))
 
 (def selected-cols
   "Column id is not a feature but it is useful to have ID in train and test datasets"

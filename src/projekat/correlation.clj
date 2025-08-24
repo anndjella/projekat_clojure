@@ -6,13 +6,19 @@
             )
   (:import  (org.jfree.chart.axis CategoryLabelPositions)))
            
-(defn correlations-to-rating
-  "Calculates Pearson correlations between a target column and all other columns in the dataset"
-  [data target-col]
-  (let [cols (remove #{target-col :movies/id} (keys (first data)))
-        target-vec (mapv target-col data)] 
+;; (defn correlations-to-rating
+;;   "Calculates Pearson correlations between a target column and all other columns in the dataset"
+;;   [data target-col]
+;;   (let [cols (remove #{target-col :movies/id} (keys (first data)))
+;;         target-vec (mapv target-col data)] 
     
-         (into {} (map (fn [c] [c (stats/correlation target-vec (mapv c data))]) cols))))
+;;          (into {} (map (fn [c] [c (stats/correlation target-vec (mapv c data))]) cols))))
+
+(defn correlations-to-rating [data target-col]
+  (let [cols (remove #{target-col :id} (keys (first data)))
+        target-vec (mapv target-col data)]
+    (into {}
+          (pmap (fn [c] [c (stats/correlation target-vec (mapv #(get % c) data))]) cols))))
 
 (defn print-correlations
   [correlations]
@@ -21,14 +27,13 @@
 ;; (print-correlations {:runtime 0.85 :budget -0.12})
 
 (defn analyze-correlation
-  []
-  (let [data (db/fetch-all-data "movies")]
-    (println "\nCorrelations with rating_cleaned:")
-    (-> data
-        (correlations-to-rating :movies/rating_cleaned) 
-        (print-correlations))))
+  [data]
+  (println "\nCorrelations with rating_cleaned:") 
+  (-> data
+        (correlations-to-rating :rating_cleaned) 
+        (print-correlations)))
 
-(def corrs (correlations-to-rating (db/fetch-all-data "movies") :movies/rating_cleaned))
+(def corrs (correlations-to-rating (db/fetch-all-data "movies") :rating_cleaned))
 
 
 (defn show-corr-chart []
@@ -43,24 +48,9 @@
   (view chart :width 1400 :height 800)))
 
 
-
-(correlations-to-rating  (db/fetch-all-data "movies") :movies/rating_cleaned)
-;; (correlations-to-rating [{:rating 1.0 :runtime 2.0} {:rating 2.0 :runtime 4.0} {:rating 3.0 :runtime 6.0}] :rating)
-
-;; (remove #{:movies/rating_cleaned :movies/id}(keys (first (db/fetch-all-data))))
-
-;; (mapv #{:movies/rating_cleaned} (keys (first (db/fetch-all-data))))
-;; (first (db/fetch-all-data))
-
-;; (mapv (fn [x] (* x 2)) [1 2 3])
-
-;; (map (fn [c] [c (stats/correlation (mapv :rating [{:rating 1.0 :runtime 2.0} {:rating 2.0 :runtime 4.0} {:rating 3.0 :runtime 6.0}]) (mapv c [{:rating 1.0 :runtime 2.0} {:rating 2.0 :runtime 4.0} {:rating 3.0 :runtime 6.0}]))]) [:rating :runtime])
-
-
-
 (defn multicollinear-pairs
   [data threshold]
-  (let [cols (vec (remove #{:movies/rating_cleaned :movies/id} (keys (first data))))
+  (let [cols (vec (remove #{:rating_cleaned :id} (keys (first data))))
         n    (count cols)]
     (->> (for [i (range n), j (range (inc i) n)]
            (let [xi (mapv (nth cols i) data)

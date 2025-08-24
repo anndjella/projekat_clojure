@@ -11,7 +11,10 @@
 
  (defn generate-report
    []
-   (let [{:keys [header rows]} (clean/process-data "resources/IMDbMovies.csv")]
+   (let [{:keys [header rows]} (clean/process-data "resources/IMDbMovies.csv")
+         all-movies (db/fetch-all-data "movies") 
+         train (db/fetch-all-data "movies_train") 
+         test (db/fetch-all-data "movies_test")]
      (println (str "Number of movies in this dataset: " (clean/number-of-rows rows)))
      (println "All attributes in the dataset:")
      (println (str/join ", " header))
@@ -31,7 +34,7 @@
      (println "NA values are successfully replaced and put in finalCleanCSV.\n")
      (println "We need to decide which variables to include in analysis and for that 
                      we need to inspect their correlations with Rating variable...\n")
-     (corr/analyze-correlation)
+     (corr/analyze-correlation all-movies)
      ;; (corr/show-corr-chart)
      (println "===============================")
      (println "Kept the following features (correlation > |0.08|, except 'gross*' variables which were excluded due to frequent missing values):")
@@ -55,12 +58,12 @@
      (println "\nThe only predictor pair with |r| > 0.8 is 
                  gross_worldwide_cleaned <> gross_in_us_canada_cleaned (r=0.9165). 
                  However, all 'gross*' variables were already excluded due to 
-                 missing values, so we proceed with the remaining features"))
+                 missing values, so we proceed with the remaining features")
    (println "\nNext, we split the movies dataset into training (80%) and test (20%) datasets (movies_train, movies_test)")
   ;;  (db/insert-data-train-test 0.8 26)
    (println "After splitting the dataset, we can proceed to train and evaluate our model\n")
-   (lm/train-eval)
-   )
+   (lm/train-eval train test)
+   ))
 
 (defn -main
   [& arg]

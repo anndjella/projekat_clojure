@@ -1,6 +1,7 @@
 (ns projekat.correlation
   (:require [incanter.stats :as stats]
             [projekat.dbWork :as db]
+            [projekat.config :as cfg]
             [incanter.charts :as charts]
             [incanter.core :refer [view]]
             )
@@ -49,15 +50,17 @@
 
 
 (defn multicollinear-pairs
-  [data threshold]
-  (let [cols (vec (remove #{:rating_cleaned :id} (keys (first data))))
-        n    (count cols)]
+  [data threshold cols]
+  (let [cols   (vec cols)
+        col-v (into {} (map (fn [c] [c (mapv #(double (get % c)) data)]) cols))
+        n      (count cols)]
     (->> (for [i (range n), j (range (inc i) n)]
-           (let [xi (mapv (nth cols i) data)
-                 xj (mapv (nth cols j) data)
-                 r  (stats/correlation xi xj)]
-             [(nth cols i) (nth cols j) r]))
-         (filter #(>= (Math/abs (nth % 2)) threshold)))))
+           (let [ci (nth cols i)
+                 cj (nth cols j)
+                 r  (stats/correlation (col-v ci) (col-v cj))]
+             (when (>= (Math/abs r) threshold) [ci cj r])))
+         (keep identity)
+         vec)))
 
 ;; (multicollinear-pairs
 ;;  [{:movies/id 1 :x 1.0 :y 2.0 :z 8.0 :movies/rating_cleaned 10.0}
@@ -67,8 +70,8 @@
 ;;  0.9)
 
 (defn print-multicollinearity
-  ([threshold]
-   (doseq [[a b r] (multicollinear-pairs (db/fetch-all-data "movies") threshold)]
+  ([data threshold cols]
+   (doseq [[a b r] (multicollinear-pairs data threshold cols)]
      (println (format "%s <> %s : r=%.4f" (name a) (name b) r)))))
 
 ;; (print-multicollinearity 0.8)

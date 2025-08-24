@@ -6,7 +6,8 @@
             [projekat.correlation :as corr]
             [projekat.imputation :as imputation]
             [projekat.lm :as lm]
-            [projekat.dbWork :as db]))
+            [projekat.dbWork :as db]
+            [projekat.config :as cfg]))
 
 
  (defn generate-report
@@ -53,12 +54,11 @@
                                     "horror"
                                     "release_year"]))
      (println "===============================")
-     (println "Check multicollinearity among selected predictors\n")
-     (corr/print-multicollinearity 0.8)
-     (println "\nThe only predictor pair with |r| > 0.8 is 
-                 gross_worldwide_cleaned <> gross_in_us_canada_cleaned (r=0.9165). 
-                 However, all 'gross*' variables were already excluded due to 
-                 missing values, so we proceed with the remaining features")
+     (println "Check multicollinearity among selected predictors...\n") 
+     (corr/print-multicollinearity all-movies 0.8 cfg/feature-columns)
+     (println "\nNo predictor pairs have |r| >= 0.8. 
+               Therefore, we proceed with the remaining features 
+               without excluding any additional variables.")
    (println "\nNext, we split the movies dataset into training (80%) and test (20%) datasets (movies_train, movies_test)")
   ;;  (db/insert-data-train-test 0.8 26)
    (println "After splitting the dataset, we can proceed to train and evaluate our model\n")
@@ -67,7 +67,10 @@
 
 (defn -main
   [& arg]
-  (generate-report)
+  (try
+    (generate-report)
+    (finally
+      (shutdown-agents)))
   )
 
   

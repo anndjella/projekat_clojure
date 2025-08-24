@@ -176,7 +176,8 @@
          {:id 2 :x 2.0 :y 4.0 :z 6.0 :rating_cleaned 9.0}
          {:id 3 :x 3.0 :y 6.0 :z 4.0 :rating_cleaned 8.0}
          {:id 4 :x 4.0 :y 8.0 :z 2.0 :rating_cleaned 7.0}]
-        0.9)
+        0.9
+        [:x,:y,:z])
        => (contains
            [(contains :x :y (roughly  1.0 1e-12))
             (contains :x :z (roughly -1.0 1e-12))
@@ -187,8 +188,9 @@
         [{:id 1 :x 1.0 :y 2.0 :z 8.0 :rating_cleaned 10.0}
          {:id 2 :x 2.0 :y 4.0 :z 6.0 :rating_cleaned 9.0}
          {:id 3 :x 3.0 :y 6.0 :z 4.0 :rating_cleaned 8.0}
-         {:id 4 :x 4.0 :y 8.0 :z 2.0 :rating_cleaned 7.0}]
-        1.0)
+         {:id 4 :x 4.0 :y 8.0 :z 2.0 :rating_cleaned 7.0}] 
+        1.0
+        [:x,:y,:z])
        => (contains
            [(contains :x :y (roughly  1.0 1e-12))
             (contains :x :z (roughly -1.0 1e-12))
@@ -200,7 +202,8 @@
          {:x 2.0 :y 4.0 :z 6.0}
          {:x 3.0 :y 6.0 :z 4.0}
          {:x 4.0 :y 8.0 :z 2.0}]
-        0.5)
+        0.5
+        [:x,:y,:z])
        => (contains
            [(contains :x :y (roughly  1.0 1e-12))
             (contains :x :z (roughly -1.0 1e-12))

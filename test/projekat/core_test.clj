@@ -5,10 +5,10 @@
                                        map-row parse-budget parse-genres parse-num-of-ratings
                                        parse-rating parse-runtime]]
             [projekat.imputation :refer [calculate-mean fill-missing is-empty? parse-value]]
-            [projekat.correlation :refer [correlations-to-rating multicollinear-pairs]]
+            [projekat.correlation :refer [correlations-to-target multicollinear-pairs]]
             [midje.sweet :refer :all]
             [projekat.dbWork :refer [split-train-test-rows]]
-            [projekat.lm :refer [evaluate fit-stats log-before-std? numeric-cols predict-y selected-cols transform-row]]
+            [projekat.lm :refer [evaluate fit-stats log-before-std? numeric-cols predict-y transform-row]]
             ))
 
 (facts "Parse-budget function test"
@@ -153,20 +153,23 @@
 
 ;;===============corr tests======================
 (facts "correlations-to-rating tests"
-       (correlations-to-rating [{:rating 1.0 :runtime 2.0}
-                                 {:rating 2.0 :runtime 4.0}
+       (correlations-to-target [{:rating 1.0 :runtime 2.0}
+                                {:rating 2.0 :runtime 4.0}
                                 {:rating 3.0 :runtime 6.0}]
-                                :rating) => {:runtime 1.0}
+                               :rating
+                               [:runtime]) => {:runtime 1.0}
 
-       (correlations-to-rating [{:rating 1.0 :runtime 6.0}
+       (correlations-to-target [{:rating 1.0 :runtime 6.0}
                                  {:rating 2.0 :runtime 4.0}
                                 {:rating 3.0 :runtime 2.0}]
-                               :rating)  => {:runtime -1.0}
+                               :rating
+                               [:runtime])  => {:runtime -1.0}
        
-       (correlations-to-rating [{:rating 1.0 :runtime 6.0}
+       (correlations-to-target [{:rating 1.0 :runtime 6.0}
                                 {:rating 2.0 :runtime nil}
                                 {:rating 3.0 :runtime 2.0}]
-                               :rating) => (throws Exception))
+                               :rating
+                               [:runtime]) => (throws Exception))
 
 
 (facts "multicollinear-pairs tests"
@@ -220,19 +223,13 @@
 ;;lm tests
 (facts "predict-y"
        
-       (with-redefs [selected-cols [:x]]
-         (predict-y {:coefs [0.0 2.0]}
-                    [{:x 1.0} {:x 2.0} {:x 3.0}]))
+         (predict-y {:coefs [0.0 2.0]} [{:x 1.0} {:x 2.0} {:x 3.0}] [:x])
        => (just 2.0 4.0 6.0)
-
-       (with-redefs [selected-cols [:x]]
-         (predict-y {:coefs [3.0 2.0]}
-                    [{:x 1.0} {:x 2.0} {:x 3.0}]))
+       
+         (predict-y {:coefs [3.0 2.0]} [{:x 1.0} {:x 2.0} {:x 3.0}] [:x])
        => (just 5.0 7.0 9.0)
-
-       (with-redefs [selected-cols [:x :z]]
-         (predict-y {:coefs [1.0 2.0 3.0]}
-                    [{:x 1.0} {:x 2.0}]))
+       
+        (predict-y {:coefs [1.0 2.0 3.0]} [{:x 1.0} {:x 2.0}] [:x :z])
        => (just 3.0 5.0))
 
 

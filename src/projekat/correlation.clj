@@ -3,41 +3,35 @@
             [projekat.dbWork :as db]
             [projekat.config :as cfg]
             [incanter.charts :as charts]
-            [incanter.core :refer [view]]
-            )
+            [incanter.core :refer [view]])
   (:import  (org.jfree.chart.axis CategoryLabelPositions)))
            
-;; (defn correlations-to-rating
-;;   "Calculates Pearson correlations between a target column and all other columns in the dataset"
-;;   [data target-col]
-;;   (let [cols (remove #{target-col :movies/id} (keys (first data)))
-;;         target-vec (mapv target-col data)] 
-    
-;;          (into {} (map (fn [c] [c (stats/correlation target-vec (mapv c data))]) cols))))
-
-(defn correlations-to-rating [data target-col]
-  (let [cols (remove #{target-col :id} (keys (first data)))
-        target-vec (mapv target-col data)]
+(defn correlations-to-target
+  "Calculates correlations between a target column and each column in cols"
+  [data target-col cols]
+  (let [target-vec (mapv target-col data)]
     (into {}
           (pmap (fn [c] [c (stats/correlation target-vec (mapv #(get % c) data))]) cols))))
 
 (defn print-correlations
+  "Pretty-prints correlations sorted descending by r"
   [correlations]
   (doseq [[k v] (sort-by val > correlations)] (printf "%s: %.4f\n" (name k) v)))
 
-;; (print-correlations {:runtime 0.85 :budget -0.12})
-
 (defn analyze-correlation
-  [data]
-  (println "\nCorrelations with rating_cleaned:") 
+  "Convenience helper: prints header and then the sorted correlations to target-col"
+  [data cols target-col]
+ (println (format "\nCorrelations with %s:" (name target-col)))
   (-> data
-        (correlations-to-rating :rating_cleaned) 
+        (correlations-to-target target-col cols) 
         (print-correlations)))
 
-(def corrs (correlations-to-rating (db/fetch-all-data "movies") :rating_cleaned))
+(def corrs (correlations-to-target (db/fetch-all-data "movies") cfg/target-col cfg/feature-columns))
 
 
-(defn show-corr-chart []
+(defn show-corr-chart 
+  "Renders a bar chart of correlations"
+  []
   (let [sorted (sort-by val > corrs)   
       labels (map (comp name key) sorted)
       values (map val sorted)
@@ -50,6 +44,7 @@
 
 
 (defn multicollinear-pairs
+  "Finds multicollinearity among predictors whose absolute correlation is ≥ threshold"
   [data threshold cols]
   (let [cols   (vec cols)
         col-v (into {} (map (fn [c] [c (mapv #(double (get % c)) data)]) cols))
@@ -62,16 +57,8 @@
          (keep identity)
          vec)))
 
-;; (multicollinear-pairs
-;;  [{:movies/id 1 :x 1.0 :y 2.0 :z 8.0 :movies/rating_cleaned 10.0}
-;;   {:movies/id 2 :x 2.0 :y 4.0 :z 6.0 :movies/rating_cleaned  9.0}
-;;   {:movies/id 3 :x 3.0 :y 6.0 :z 4.0 :movies/rating_cleaned  8.0}
-;;   {:movies/id 4 :x 4.0 :y 8.0 :z 2.0 :movies/rating_cleaned  7.0}]
-;;  0.9)
-
 (defn print-multicollinearity
+  "Prints each qualifying pair from multicollinear-pairs"
   ([data threshold cols]
    (doseq [[a b r] (multicollinear-pairs data threshold cols)]
      (println (format "%s <> %s : r=%.4f" (name a) (name b) r)))))
-
-;; (print-multicollinearity 0.8)

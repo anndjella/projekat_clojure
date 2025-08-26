@@ -42,6 +42,13 @@
   (let [stats (fit-stats train-rows)]
     {:transform-row #(transform-row stats %)}))
 
+(defn add-interactions
+  "Add interaction to a row"
+  [row]
+  (let [num   (double (get row :num_of_ratings_cleaned 0.0))
+        rel (double (get row :release_year 0.0))]
+    (assoc row :num_of_ratings_cleaned_x_release_year (* num rel))))
+
 (defn train-linear-model
   "Trains an linear model on the given feature columns"
    [train-rows target-col feature-cols]
@@ -83,8 +90,11 @@
   "Prepares the data, trains the model, evaluates on the test set, and prints metrics."
   [train0 test0 target-col feature-cols]
   (let [{:keys [transform-row]} (fit-preprocess train0)
-        train (mapv transform-row train0)
-        test  (mapv transform-row test0)
+      train-z (mapv transform-row train0)
+      test-z  (mapv transform-row test0)
+      
+      train   (mapv add-interactions train-z)
+      test    (mapv add-interactions test-z)
   
         model (train-linear-model train target-col feature-cols)
         y     (mapv target-col test)
@@ -99,6 +109,6 @@
     ;;   (println (format "%-22s %.6f" (name k) (double b))))
     (println "\nSignificance (sorted by p desc):")
     (doseq [[nm b t p] (->> rows (drop 1) (sort-by (fn [[_ _ _ p]] p) >))]
-      (println (format "%-22s b=% .6f  t=% .3f  p=%.4f%s"
+      (println (format "%-40s b=% .6f  t=% .3f  p=%.4f%s"
                        (name nm) (double b) (double t) (double p)
                        (if (> (double p) 0.05) "   <-- kandidat za brisanje" ""))))))

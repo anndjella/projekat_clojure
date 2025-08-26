@@ -8,7 +8,7 @@
             [projekat.correlation :refer [correlations-to-target multicollinear-pairs]]
             [midje.sweet :refer :all]
             [projekat.dbWork :refer [split-train-test-rows]]
-            [projekat.lm :refer [evaluate fit-stats log-before-std? numeric-cols predict-y transform-row]]
+            [projekat.lm :refer [evaluate fit-stats log-before-std? numeric-cols predict-y transform-row add-interactions]]
             ))
 
 (facts "Parse-budget function test"
@@ -237,6 +237,16 @@
        (evaluate [2.0 4.0 6.0] [2.0 4.0 6.0]) => {:mae 0.0 :rmse 0.0 :r2 1.0}
       (evaluate [1.0 2.0 3.0] [1.0 2.0 4.0]) => {:mae 0.3333333333333333 :rmse 0.5773502691896257 :r2 0.5}
       (evaluate [1.0 2.0 3.0] [2.0 3.0 4.0]) => {:mae 1.0 :rmse 1.0 :r2 -0.5})
+
+(facts "add-interactions"
+       (add-interactions {:num_of_ratings_cleaned 10 :release_year 2000})
+       => {:num_of_ratings_cleaned 10 :num_of_ratings_cleaned_x_release_year 20000.0 :release_year 2000}
+
+       (add-interactions {:num_of_ratings_cleaned 5 :release_year 1990 :drama 1})
+       => {:drama 1 :num_of_ratings_cleaned 5 :num_of_ratings_cleaned_x_release_year 9950.0 :release_year 1990}
+       
+       (add-interactions {})
+       => {:num_of_ratings_cleaned_x_release_year 0.0})
 
 (with-redefs [numeric-cols [:a :b]
               log-before-std? {:a true :b false}]

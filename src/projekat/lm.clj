@@ -1,5 +1,6 @@
 (ns projekat.lm
   (:require [incanter.core :as i]
+            [clojure.java.io :as io]
             [incanter.stats :as stats]))
 
 
@@ -86,29 +87,46 @@
              0.0
              (- 1.0 (/ ssres sstot)))}))
 
-(defn train-eval
-  "Prepares the data, trains the model, evaluates on the test set, and prints metrics."
-  [train0 test0 target-col feature-cols]
+(defn train-model
+  "Prepares data, applies preprocessing, and trains a linear model"
+  [train0 target-col feature-cols]
   (let [{:keys [transform-row]} (fit-preprocess train0)
-      train-z (mapv transform-row train0)
-      test-z  (mapv transform-row test0)
-      
-      train   (mapv add-interactions train-z)
-      test    (mapv add-interactions test-z)
-  
-        model (train-linear-model train target-col feature-cols)
+        stats (fit-stats train0)
+        train (mapv #(-> % transform-row add-interactions) train0)
+        model (train-linear-model train target-col feature-cols)]
+    {:stats stats
+     :model model
+     :transform-row transform-row}))
+
+
+(defn eval-model
+  "Evaluates on the test set and prints metrics"
+  [train0 test0 target-col feature-cols]
+  (let [{:keys [model transform-row]} (train-model train0 target-col feature-cols)
+        test (mapv #(-> % transform-row add-interactions) test0)
+
         y     (mapv target-col test)
         y-predicted  (predict-y model test feature-cols)
         metrics  (evaluate y y-predicted)
         names (into [:intercept] feature-cols)
         rows  (map vector names (:coefs model) (:t-tests model) (:t-probs model))]
+    
     (println "Metrics:" metrics)
-  
     (println "Intercept:" (first (:coefs model)))
-    ;;  (doseq [[k b] (map vector selected-cols (rest (:coefs model)))]
-    ;;   (println (format "%-22s %.6f" (name k) (double b))))
     (println "\nSignificance (sorted by p desc):")
     (doseq [[nm b t p] (->> rows (drop 1) (sort-by (fn [[_ _ _ p]] p) >))]
       (println (format "%-40s b=% .6f  t=% .3f  p=%.4f%s"
                        (name nm) (double b) (double t) (double p)
                        (if (> (double p) 0.05) "   <-- kandidat za brisanje" ""))))))
+
+(defn train-and-save
+  "Trains the linear model and persists the resulting artifact for future predictions"
+  [train0 feature-cols target-col]
+  (let [{:keys [stats model]} (train-model train0 target-col feature-cols)
+        coefs (:coefs model)
+        artifact {:selected-cols feature-cols
+                  :stats         stats
+                  :intercept     (double (first coefs))
+                  :betas         (mapv double (rest coefs))}]
+    (spit (io/file "resources/lm-artifact.edn") (pr-str artifact))
+    artifact))

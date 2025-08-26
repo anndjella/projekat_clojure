@@ -35,7 +35,7 @@
      (println "NA values are successfully replaced and put in finalCleanCSV.\n")
      (println "We need to decide which variables to include in analysis and for that 
                      we need to inspect their correlations with Rating variable...\n")
-     (corr/analyze-correlation all-movies cfg/feature-columns cfg/target-col)
+     (corr/analyze-correlation all-movies cfg/all-predictors cfg/target-col)
      ;; (corr/show-corr-chart)
      (println "===============================")
      (println "Kept the following features (correlation > |0.08|, except 'gross*' variables which were excluded due to frequent missing values):")
@@ -62,11 +62,16 @@
    (println "\nNext, we split the movies dataset into training (80%) and test (20%) datasets (movies_train, movies_test)")
   ;;  (db/insert-data-train-test 0.8 26)
    (println "After splitting the dataset, we can proceed to train and evaluate our model\n")
-   (lm/train-eval train test cfg/target-col cfg/final-feature-columns)
+   (lm/eval-model train test cfg/target-col cfg/final-feature-columns)
+   (println "\nThe model achieves acceptable performance based on the evaluation metrics. 
+             Therefore, we consider it suitable for prediction tasks and will preserve 
+             the trained model for future use in movie rating prediction.\n") 
+    ;;  (lm/train-and-save train cfg/final-feature-columns cfg/target-col) 
+      (println "The trained model is saved to resources as lm-artifact.edn")
    ))
 
 (defn -main
-  [& arg]
+  []
   (try
     (generate-report)
     (finally

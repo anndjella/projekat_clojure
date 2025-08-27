@@ -277,6 +277,6 @@
                                                 :drama 1
                                                 :biography 0
                                                 :war 0})
-       => {:prediction 1944.3381613579843})
+       => {:prediction 15.194303471035383})
 
 

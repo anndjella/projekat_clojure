@@ -9,6 +9,7 @@
             [midje.sweet :refer :all]
             [projekat.dbWork :refer [split-train-test-rows]]
             [projekat.lm :refer [evaluate fit-stats log-before-std? numeric-cols predict-y transform-row add-interactions]]
+            [projekat.server :refer [predict-one]]
             ))
 
 (facts "Parse-budget function test"
@@ -268,5 +269,14 @@
                zrow       (transform-row stats {:a 3.0 :b 20.0})]
            (:a zrow) => (roughly 0.70710678 1e-6)
            (:b zrow) => (roughly 0.70710678 1e-6))))
+
+;;server tests
+(facts "predict-one tests"
+       (predict-one @projekat.server/artifact* {:runtime_cleaned 120
+                                                :num_of_ratings_cleaned 5000
+                                                :drama 1
+                                                :biography 0
+                                                :war 0})
+       => {:prediction 1944.3381613579843})
 
 

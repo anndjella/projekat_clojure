@@ -41,7 +41,8 @@
    "Returns a row transformer fitted on the training data"
   [train-rows]
   (let [stats (fit-stats train-rows)]
-    {:transform-row #(transform-row stats %)}))
+    {:stats stats
+     :transform-row #(transform-row stats %)}))
 
 (defn add-interactions
   "Add interaction to a row"
@@ -50,7 +51,7 @@
         rel (double (get row :release_year 0.0))]
     (assoc row :num_of_ratings_cleaned_x_release_year (* num rel))))
 
-(defn train-linear-model
+(defn fit-lm
   "Trains an linear model on the given feature columns"
    [train-rows target-col feature-cols]
    (let [  y    (mapv target-col train-rows)
@@ -90,10 +91,9 @@
 (defn train-model
   "Prepares data, applies preprocessing, and trains a linear model"
   [train0 target-col feature-cols]
-  (let [{:keys [transform-row]} (fit-preprocess train0)
-        stats (fit-stats train0)
+  (let [{:keys [stats transform-row]} (fit-preprocess train0)
         train (mapv #(-> % transform-row add-interactions) train0)
-        model (train-linear-model train target-col feature-cols)]
+        model (fit-lm train target-col feature-cols)]
     {:stats stats
      :model model
      :transform-row transform-row}))

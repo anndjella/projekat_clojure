@@ -20,8 +20,10 @@
                  [ring/ring-core "1.11.0"]
                  [ring/ring-jetty-adapter "1.11.0"]
                  [ring-cors "0.1.13"]
+                 [compojure "1.7.0"]
                  ]
-  :main ^:skip-aot projekat.core
+  ;; :main ^:skip-aot projekat.core
+  :main ^:skip-aot projekat.server
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all
                        :jvm-opts ["-Dclojure.compiler.direct-linking=true"]}

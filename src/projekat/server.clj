@@ -8,7 +8,7 @@
 (defn load-artifact []
   (edn/read-string (slurp "resources/lm-artifact.edn")))
 
-(defonce artifact* (load-artifact))
+(defonce artifact* (atom (load-artifact)))
 
 (defn predict-one [artifact input]
   (let [{:keys [intercept betas selected-cols stats]} artifact 
@@ -30,9 +30,13 @@
   (let [{:keys [request-method uri]} req]
     (cond 
       (and (= request-method :post) (= uri "/api/predict"))
-      (let [raw  (slurp (:body req))
-            body (json/parse-string raw true)]
-        (json-response {:received body}))
+      (try
+        (let [a    @artifact*
+              raw  (slurp (:body req))
+              body (json/parse-string raw true)]
+          (json-response (predict-one a body)))
+        (catch Exception e
+          (json-response 400 {:error (.getMessage e)})))
 
       :else
       (-> (resp/response "Not found")

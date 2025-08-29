@@ -9,7 +9,7 @@
             [midje.sweet :refer :all]
             [projekat.dbWork :refer [split-train-test-rows]]
             [projekat.lm :refer [evaluate fit-stats log-before-std? numeric-cols predict-y transform-row add-interactions]]
-            [projekat.server :refer [predict-one]]
+            [projekat.server :refer [predict-movie-rating]]
             ))
 
 (facts "Parse-budget function test"
@@ -272,11 +272,28 @@
 
 ;;server tests
 (facts "predict-one tests"
-       (predict-one @projekat.server/artifact* {:runtime_cleaned 120
-                                                :num_of_ratings_cleaned 5000
+       (predict-movie-rating @projekat.server/artifact* {:runtime_cleaned 400
+                                                :num_of_ratings_cleaned 4000000
+                                                 :release_year 2030
                                                 :drama 1
-                                                :biography 0
-                                                :war 0})
-       => {:prediction 15.194303471035383})
+                                                :biography 1
+                                                :documentary 0 
+                                                :animation 0 
+                                                :action 0
+                                                :comedy 1 
+                                                :horror 0})
+       => (contains {:rating-clamped 10.0})
+       
+       (predict-movie-rating @projekat.server/artifact* {:runtime_cleaned 130
+                                                         :num_of_ratings_cleaned 987000
+                                                          :release_year 2013
+                                                         :drama 1
+                                                         :biography 0
+                                                         :documentary 1
+                                                         :animation 0
+                                                         :action 0
+                                                         :comedy 1
+                                                         :horror 0} )
+       => (contains {:rating-clamped 8.814509426145246}))
 
 

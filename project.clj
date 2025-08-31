@@ -9,7 +9,7 @@
                  [seancorfield/next.jdbc "1.1.613"]
                  [org.xerial/sqlite-jdbc "3.36.0.3"]
                  [midje "1.10.9" :exclusions [org.clojure/tools.logging]] 
-                ;;  [org.slf4j/slf4j-simple "1.7.32"] 
+                 [org.slf4j/slf4j-simple "1.7.32"] 
                  [incanter "1.9.3"]
                  [criterium "0.4.6"]
                  [ring/ring-core "1.11.0"]

@@ -5,23 +5,16 @@
             :url "https://www.eclipse.org/legal/epl-2.0/"}
   :dependencies [[org.clojure/clojure "1.11.1"]
                  [org.clojure/data.csv "1.0.0"] 
-                 [seesaw "1.5.0"]
-                 [clj-http "3.12.3"]
                  [cheshire "5.10.0"]
                  [seancorfield/next.jdbc "1.1.613"]
                  [org.xerial/sqlite-jdbc "3.36.0.3"]
-                 [midje "1.10.9" :exclusions [org.clojure/tools.logging]]
-                 [org.slf4j/slf4j-api "1.7.32"]
-                 [org.slf4j/slf4j-simple "1.7.32"] 
+                 [midje "1.10.9" :exclusions [org.clojure/tools.logging]] 
+                ;;  [org.slf4j/slf4j-simple "1.7.32"] 
                  [incanter "1.9.3"]
                  [criterium "0.4.6"]
-
-                  [metosin/reitit-ring "0.7.0"]
                  [ring/ring-core "1.11.0"]
                  [ring/ring-jetty-adapter "1.11.0"]
-                 [ring-cors "0.1.13"]
-                 [compojure "1.7.0"]
-                 ]
+                 [ring-cors "0.1.13"]]
   ;; :main ^:skip-aot projekat.core
   :main ^:skip-aot projekat.server
   :target-path "target/%s"

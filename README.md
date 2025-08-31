@@ -1,32 +1,15 @@
-# projekat
+# Project goal
 
-FIXME: description
+The goal of this project is **to predict a movie’s rating on IMDb**. IMDb is a website that collects user ratings for movies. Those ratings are subjective and depend on many factors.  
+The model I use is **linear regression**. In short, it finds coefficients ($\beta$) so that a linear combination of inputs best fits the known ratings:
 
-## Installation
+$$
+{y} = \beta_0 + \sum_i \beta_i x_i
+$$
 
-Download from http://example.com/FIXME.
+The key point is that **all features must be numeric or 0/1** (one-hot encoded categories), so the linear model can work directly.
 
-## Usage
-
-FIXME: explanation
-
-    $ java -jar projekat-0.1.0-standalone.jar [args]
-
-## Options
-
-FIXME: listing of options this app accepts.
-
-## Examples
-
-...
-
-### Bugs
-
-...
-
-### Any Other Sections
-### That You Think
-### Might be Useful
+The data source is the **uncleaned Kaggle IMDbMovies.csv dataset**: <https://www.kaggle.com/datasets/elvinrustam/imdb-movies-dataset>
 
 ## License
 

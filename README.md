@@ -12,9 +12,7 @@ The key point is that **all features must be numeric or 0/1** (one-hot encoded c
 The data source is the **uncleaned Kaggle IMDbMovies.csv dataset**: <https://www.kaggle.com/datasets/elvinrustam/imdb-movies-dataset>
 
 # Project flow and files
-
-## `cleaning.clj`
-
+ `cleaning.clj`
 1) **CSV analysis and column inspection.**  
 2) **Cleaning the CSV** through the following steps:
    1. **Dropping columns** with too many NAs or that are hard to convert into numeric/categorical variables  
@@ -25,27 +23,22 @@ The data source is the **uncleaned Kaggle IMDbMovies.csv dataset**: <https://www
    5. **Number of ratings**: formats like `"1.2M"` are converted to a plain **double** (`1200000`).
    6. **Genres (Main-Genres)**: converted to **one-hot encoding** — first, detect the set of all genres in the dataset; then, for each movie, set `1` for the genres it has and `0` for the rest.
 
-`cleaning.clj` reads the original **IMDBMovies.csv** and the cleaned version is written as **cleanedCSV**.
+`cleaning.clj` 
+reads the original **IMDBMovies.csv** and the cleaned version is written as **cleanedCSV**.
 
----
-
-## `imputation.clj`
+`imputation.clj`
 
 For the cleaned data, where all columns are numeric or 0/1, **NA values** are filled with the **column mean**.  
 From `cleanedCSV` I obtain **finalCleanCSV**.
 
----
-
-## `dbWork.clj`
+`dbWork.clj`
 
 Enables importing the **entire finalCleanCSV** dataset into a **SQLite** database.  
 The database is stored at **`resources/database.db`**.
 
 In this file, the dataset is also split into train and test sets.
 
----
-
-## `correlation.clj`
+`correlation.clj`
 
 Used for **two purposes**:
 
@@ -60,7 +53,33 @@ Used for **two purposes**:
    there are **no pairs with |r| > 0.8**, so all were kept for modeling.
 
 ---
+# Libraries Used
 
+This project relies on the following dependencies:
+
+- **Clojure** (`org.clojure/clojure`, v1.11.1) - core language and standard library.  
+- **Data Processing**  
+  - `org.clojure/data.csv` - reading and writing CSV files.  
+  - `cheshire` - JSON parsing and generation.  
+
+- **Database**  
+  - `seancorfield/next.jdbc` - JDBC wrapper for Clojure.  
+  - `org.xerial/sqlite-jdbc` - SQLite JDBC driver (required by `next.jdbc`).  
+
+- **Web / Server**  
+  - `ring/ring-core` - HTTP utilities and middleware.  
+  - `ring/ring-jetty-adapter` - runs the Ring app on a Jetty web server so it can handle real HTTP requests.  
+  - `ring-cors` - CORS (Cross-Origin Resource Sharing) rules to allow API calls from a separate frontend.  
+
+- **Statistics & Analysis**  
+  - `incanter` - statistical functions, linear models and charting.  
+
+- **Testing & Benchmarking**  
+  - `midje` - a testing framework for writing readable, expressive unit tests in Clojure.  
+  - `criterium` - a benchmarking library that measures execution time accurately for performance-critical functions.  
+
+- **Logging**  
+  - `org.slf4j/slf4j-simple` - simple SLF4J binding (helpful for Jetty and Ring logs). 
 
 ## License
 

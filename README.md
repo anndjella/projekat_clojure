@@ -36,7 +36,7 @@ From `cleanedCSV` I obtain **finalCleanCSV**.
 Enables importing the **entire finalCleanCSV** dataset into a **SQLite** database.  
 The database is stored at **`resources/database.db`**.
 
-In this file, the dataset is also split into train and test sets.
+In this file, the dataset is also split into train and test sets (see below).
 
 `correlation.clj`
 
@@ -52,6 +52,60 @@ Used for **two purposes**:
    *(runtime_cleaned, num_of_ratings_cleaned, drama, biography, war, history, documentary, animation, thriller, action, comedy, horror, release_year)*  
    there are **no pairs with |r| > 0.8**, so all were kept for modeling.
 
+---
+**Deterministic split (train/test) - `dbWork.clj`**
+
+The **Movies** dataset is split into **train** and **test** **deterministically**, using a **fixed seed** (this is done with java.util.Random).  
+This ensures the same movie always ends up in the same partition - results are **reproducible**.
+
+In the database (`resources/database.db`) the tables are:`movies` - **9,083** rows (all movies),`movies_train` - **7,266** rows (80%), `movies_test` - **1,817** rows (20%)
+
+---
+
+ `lm.clj` - training the model (Incanter linear-model)
+
+1. **Initial version (no normalization/transformations)** on the train set:  
+   - **RMSE = 0.84**, **MAE = 0.61**, **R² = 0.36**  
+   - **Intercept = 30.42**, which is outside the rating range (ratings go 1–10), so the model is poorly scaled.
+
+2. **Standardizing numeric variables**:  
+   `num_of_ratings_cleaned`, `release_year`, and `runtime_cleaned` -> z-scores (`z = (x−μ)/sd`).  
+   - The intercept **comes back to a realistic range** (6.4) but other metrics **slightly worsened** .
+
+3. **Filtering by p-values**:  
+   Variables with **p > 0.05** were removed (*history* and *thriller*).  
+   - Metrics **slightly improved** relative to the previous step 
+
+4. **Adding an interaction**:  
+   Added **`num_of_ratings_cleaned x release_year`**.  
+   - This brought a **noticeable improvement** over step 3, but then the *War* variable’s p-value increased, so it was removed.  
+   - **Final set of variables**:  
+     `:num_of_ratings_cleaned, :runtime_cleaned, :drama, :biography, :documentary, :animation, :action, :comedy, :horror, :release_year, :num_of_ratings_cleaned_x_release_year`
+
+**Final metrics: RMSE = 0.8257**, **MAE = 0.59**, **R² = 0.38**  
+- While the results are somewhat unsatisfactory, this is expected given the nature of the data. IMDB ratings are subjective and noisy and the model relies only on basic metadata (runtime, year, genres, number of ratings) without richer features (marketing campaigns, cultural context, actor popularity spikes, cast/crew details, plot quality, script...). A simple linear regression was chosen for interpretability, which limits performance but still achieves an average error of less than one rating point on a 1-10 scale
+
+> **Note:** Training was performed on the **train** data, and testing/evaluation exclusively on the **test** data from the database.
+
+---
+
+**`server.clj`** 
+Backend that enables predictions based on input features and the saved artifact **`resources/lm-artifact.edn`**. 
+When the user submits the form in the frontend, the server logs:
+- the parsed input (`Parsed: {...}`),
+- standardized numeric features (`z`),
+- per-feature contributions (`b*x`),
+- `Σ b*x`, the `intercept` and the final predicted `rating` (also returned as JSON, rounded to one decimal).
+
+Example server console trace:
+![alt text](resources/pictures/trace.png)
+
+# Other files
+
+- **`core.clj`** - comments and the "evolution of the model work".  
+- **`config.clj`** - centralized model configuration: `all-predictors`, `target-col`, `feature-columns`, `final-feature-columns`.   
+- **`bench.clj`** - benchmarking for the longest-running analysis functions: `correlations-to-target` and `multicollinear-pairs` from `correlation.clj`.  
+- **`test/core_test.clj`** - in total 97 Midje tests validating functions from multiple namespaces.
 ---
 # Libraries Used
 

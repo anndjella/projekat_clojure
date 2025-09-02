@@ -203,27 +203,57 @@ npx shadow-cljs watch app
 
 - Enter **runtime** (beween 20 and 400), **number of ratings** (between 1 and 400000), **release year** (between 1900 and 2030), and **genres** in the UI.  
 - The predicted rating is displayed if the backend is running and reachable.
-5) To run Midje tests (optional)
+5) To run Midje tests (**optional**)
 ```bash
 cd /your-chosen-folder/projekat_clojure
 lein midje
 ```
+6) Inspect the SQLite database (**optional**)
+
+You can optionally open the local **SQLite** database for debugging/inspection.
+
+**Database path:** `resources/database.db`
+
+**GUI (DB Browser for SQLite):**
+  ```bash
+  cd /your-chosen-folder/projekat_clojure
+  sudo apt install sqlitebrowser
+  sqlitebrowser
+  ```
+
+7) Console analysis report (**optional**)
+
+If you switch the entry point from the `server.clj` to the `core.clj`, you'll get a
+**console analysis report** (dataset summary, missing values, cleaning/imputation notes, kept features, multicollinearity check, train/test split, evaluation metrics, and model save).
+
+**Switch entry point (project.clj):**
+```clojure
+;; :main ^:skip-aot projekat.server
+:main ^:skip-aot projekat.core
+```
+### Notes (in Serbian)
+I've included my working notes - a narrative of the project's workflow - in
+`resources/project-notes-sr` (**in Serbian**).  
+They document the end-to-end process: data cleaning choices, feature selection,
+model iterations (log1p + standardization, p-values, interactions), benchmarking
+with Criterium, and wiring the backend/frontend. They're optional to read, but
+they go little deeper into the implementation details and the reasoning behind the final setup.
 ## Demo (examples)
 
 > **Note on genres:** The UI exposes a small subset of genres (drama, biography, documentary, animation, action, comedy, horror). IMDb has many more; I kept these because they showed the strongest signal and keep the UI simple.
 
-### Example A - “The Game” (1997)
+### Example A - "The Game" (1997)
 ![Prediction UI + IMDb page](resources/pictures/the-game.png)
 *Prediction:* **7.7**, *IMDb:* **7.7**
 
 The prediction matches the IMDb score because the film combines a large vote count with a near-average runtime and a positive drama indicator, while year and interaction effects are minimal.
 
 ---
-### Example B - “Flow” (2024)
+### Example B - "Flow" (2024)
 ![Prediction UI + IMDb page](resources/pictures/flow.png)
 *Prediction:* **6.6**, *IMDb:* **7.9**.
 **Why the miss?**
-1) The model uses only basic metadata (runtime/year/genres/votes) - it doesn't "see" reviews, cast/crew or awards-season signals; in this case, Flow is an Oscar-winning title the model can’t account for.
+1) The model uses only basic metadata (runtime/year/genres/votes) - it doesn't "see" reviews, cast/crew or awards-season signals; in this case, Flow is an Oscar-winning title the model can't account for.
 2) In my training data, newer release years correlate slightly lower with rating.
 3) Shorter runtime and the limited genre palette can **understate appeal** for this title.
 
